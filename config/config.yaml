@@ -1,0 +1,33 @@
+samples: "config/samples.tsv"
+samples_dict: "config/samples_dict.yaml"
+host_index: "/raid_md0/Reference_Genomes/multi/chimera"
+kraken_db: "/raid_md0/metagenomic_resources/kraken_uniq_db/NT_2020_microbes"
+pathogen_spreadsheet: "config/Pathogen_spreadsheet.csv"
+#pathogen_list: "/raid_md0/louis/config-file/pathogen-list.txt"
+bwa_indices:
+  Cow: "/raid_md0/Reference_Genomes/bos/ARS-UCD1.2_Btau5.0.1Y.fa"
+  Dog: "/raid_md0/Reference_Genomes/dog/canFam3.fa"
+  Human: "/raid_md0/Reference_Genomes/human/hs37d5.fa"
+  Horse: "/raid_md0/Reference_Genomes/horse/EquCab3.fa"
+  Sheep: "/raid_md0/Reference_Genomes/sheep/rambouillet_v2_mod.fa"
+  Pig: ""
+  Goat: "/raid_md0/Reference_Genomes/goat/ARS1.fa"
+  Deer: "mCerEla1.1_GCF_910594005.1.fa.gz"
+mtDNA_indices:
+  Cow: "/raid_md0/cattle/mt_files/referenceGenomes/T3_V000654_edited_circular_normal.fa"
+  Dog: "/raid_md0/Reference_Genomes/dog/canFam3.fa"
+  Human: "/raid_md0/Reference_Genomes/human/mtDNA_human/Human_mitochondria_rCRS.fasta"
+  Horse: "/raid_md0/Reference_Genomes/FOR_pipeline/mtdna/horse/horse_mtdna.fa"
+  Sheep: "/raid_md0/Reference_Genomes/sheep/Ovis_aries_mitochondrion.fa"
+  Pig: ""
+  Goat: "/raid_md0/goat/mit/reference_data/goat_mit_revised_circularized.fa"
+  Deer: "/raid_md0/Reference_Genomes/Deer/Red_Deer-mtDNA/RedDeer-mtdna.fa"
+
+
+defaults:
+  min_reads: 50
+  min_escore: 5.0
+
+decOM_sources: "/raid_md0/louis/tools/decOM/decOM_sources/"
+n_unique_kmers: 1000
+n_tax_reads: 10

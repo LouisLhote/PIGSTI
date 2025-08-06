@@ -1,0 +1,18 @@
+taxID,Krakenuniq name,Hops name,bwa index,min_escore,min_reads
+10266,Sheeppox virus,Sheeppox virus 17077-99,/raid_md0/Reference_Genomes/Virus/Sheeppoxvirus/Sheeppoxvirus.fa,0,1
+186805,Goatpox virus,Goatpox virus Pellor,/raid_md0/Reference_Genomes/Virus/Goatpox_virus/Goatpox_virus.fa,0,1
+59509,Lumpy skin disease virus,Lumpy skin disease virus NI-2490,/raid_md0/Reference_Genomes/Virus/Lumpy_skin_disease_virus/Lumpy_skin_disease_virus.fa,0,1
+29459,Brucella melitensis,Brucella melitensis,/raid_md0/Reference_Genomes/Bacteria/Brucella_melitensis/Brucella_melitensis.fa,2,20
+238,Brucella abortus,Brucella abortus,/raid_md0/Reference_Genomes/Bacteria/Brucella_abortus/Brucella_abortus.fa,2,20
+236,Brucella ovis,Brucella ovis,/raid_md0/Reference_Genomes/Bacteria/Brucella_ovis/Brucella_ovis.fa,2,20
+29461,Brucella suis,Brucella suis,/raid_md0/Reference_Genomes/Bacteria/Brucella_suis/Brucella_suis.fa,2,20
+632,Yersinia pestis,Yersinia pestis,/raid_md0/Reference_Genomes/Bacteria/Yersinia_pestis/Yersinia_pestis.fa,5,40
+777,Coxiella burnetii,Coxiella burnetii,/raid_md0/Reference_Genomes/Bacteria/Coxiella_burnetii/Coxiella_burnetii.fa,5,20
+126793,Plasmodium vivax,Plasmodium vivax,/raid_md0/Reference_Genomes/eukaryotic_parasite/Plasmodium_vivax/Plasmodium_vivax.fa,5,50
+160,Treponema pallidum,Treponema pallidum,/raid_md0/Reference_Genomes/Bacteria/Treponema_pallidum/Treponema_pallidum.fa,5,50
+1773,Mycobacterium tuberculosis,Mycobacterium tuberculosis,/raid_md0/Reference_Genomes/Bacteria/Mycobacterium_tuberculosis/Mycobacterium_tuberculosis.fa,5,100
+630,Yersinia enterocolitica,Yersinia enterocolitica,/raid_md0/Reference_Genomes/Bacteria/Yersinia_enterocolitica_type05/Yersinia_enterocolitica_type05.fa,5,50
+2102,Mycoplasma mycoides,Mycoplasma mycoides,/raid_md0/Reference_Genomes/Bacteria/Mycoplasma_mycoides/Mycoplasma_mycoides.fa,5,50
+10258,ORF virus,ORF virus,/raid_md0/Reference_Genomes/Virus/ORF_virus/ORF_virus.fa,5,50
+10255,Variola virus,Variola virus,/raid_md0/Reference_Genomes/Virus/Smallpox/Smallpox.fa,0,5
+1504,Clostridium septicum,Clostridium septicum,/raid_md0/Reference_Genomes/Bacteria/Clostridium_septicum/Clostridium_septicum.fa,5,50
