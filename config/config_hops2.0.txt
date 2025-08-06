@@ -1,0 +1,58 @@
+# pathToMalt=/raid_md0/louis/tools/Malt0.41-1/bin/malt-run
+
+preProcess=0
+
+#################
+# MALT Parameters
+#################
+
+threadsMalt=15
+maxMemoryMalt=700
+index=/raid_md0/metagenomic_resources/malt_clustered_database_step4
+id=90.0
+# set minimum percent identity only matches whose PCI value surpasses this filter will be considered. Please consider that you can set a higher Percent Identity value in MaltExtract. So you can Malt with Percent Identity 85, but run MaltExtract twice with percent identity 85 and 95, for example. Which saves hard disk space.
+
+mpi=90.0
+
+m=BlastN
+#malt mode for this pipeline. the mode should always be BlastN if you plan to use the whole pipeline. But if you for whatever reason need to run BlastX, I made sure you still can do it from the framework of the pipeline.
+
+at=SemiGlobal
+#alignmentType! changing the alignment type will probably have *negative effects on the Authenticity criteria calculated* in MaltExtract! This value should only ever be changed by someone who knows what he is doing!
+
+topMalt=1
+#Only the highest scoring percentage of alignments will be considered for the LCA algorithm. Increasing this value will result in more alignments being used for the LCA algorithm, which means reads will likely be assigned to nodes higher in the taxonomy.
+
+sup=1
+#minimum number of reads to support a node for the LCA algorithm. This means at least one read is necessary to support a node.
+
+mq=100
+#maximum numbe
+
+########################
+# MaltExtract Parameters
+########################
+
+threadsMaltEx=15
+maxMemoryMaltEx=300
+
+filter=def_anc
+resources=/raid_md0/louis/tools/HOPS/Resources
+
+topMaltEx=0.01
+verboseMaltEx=1
+
+meganSummary=1
+minComp=0.6
+maxLength=0
+downSampOff=1
+minPIdent=85
+
+###########################
+# PostProcessing Parameters
+###########################
+
+threadsPost=5
+maxMemoryPost=40
+
+pathToList=/raid_md0/louis/config-file/pathogen-list.txt
