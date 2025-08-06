@@ -1,0 +1,7 @@
+name: prinseq
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - prinseq-plus-plus
+  - pigz

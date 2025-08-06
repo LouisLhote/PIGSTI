@@ -1,0 +1,11 @@
+name: r-env
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - r-base=4.3.1
+  - r-tidyverse
+  - r-viridis
+  - r-remotes   # allows installing packages from CRAN inside R
+  # add other R packages you need

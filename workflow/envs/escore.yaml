@@ -1,0 +1,11 @@
+name: escore
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.11
+  - pandas
+  - numpy
+  - matplotlib
+  - pyyaml   # <-- Add this line

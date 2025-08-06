@@ -1,0 +1,8 @@
+# workflow/envs/bwa_mapper.yaml
+name: bwa_mapper
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - bwa
+  - samtools
