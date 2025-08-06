@@ -1,3 +1,3 @@
 sample	r1	r2	RGLB	sequencing_run
 MYRZ180	/raid_md0/louis/screening/novaseq39/raw_data/MYRZ180-P-UPFLEX1-NUDG1-10-189-PCR1_S56_L004_R1_001.fastq.gz	/raid_md0/louis/screening/novaseq39/raw_data/MYRZ180-P-UPFLEX1-NUDG1-10-189-PCR1_S56_L004_R2_001.fastq.gz	MYRZ180-P-UPFLEX1-NUDG1-10-189-PCR1	Novaseq39
-LL066	/raid_md0/louis/screening/novaseq38/raw_data/paired-ends/LL066-A-MBEX1-NUDG1-61-122_S26_L004_R1_001.fastq.gz	/raid_md0/louis/screening/novaseq38/raw_data/paired-ends/LL066-A-MBEX1-NUDG1-61-122_S26_L004_R2_001.fastq.gz	LL066-A-MBEX1-NUDG1-61-122-PCR1	Novaseq38
+LL066	/raid_md0/louis/screening/novaseq40/raw_data/LL066-R-EDTA1-NUDG1-57-50-PCR2_S5_L001_R1_001.fastq.gz	/raid_md0/louis/screening/novaseq40/raw_data/LL066-R-EDTA1-NUDG1-57-50-PCR2_S5_L001_R2_001.fastq.gz	LL066-R-EDTA1-NUDG1-57-50-PCR2	Novaseq40
