@@ -1,4 +1,4 @@
-# PIGSTI
+# 🐖 PIGSTI
 
 **PIGSTI** (Pathogen anImal Genome Sequence ToolkIt) is a Snakemake-based pipeline designed to **detect pathogens** and **screen animal endogenous sequences** in ancient DNA (aDNA) sequencing datasets.
 
@@ -6,9 +6,12 @@
 
 ## 🚀 Features
 
-- **Pathogen detection**: Automated pipeline to identify microbial or pathogen DNA in aDNA samples.
-- **Animal endogenous screening**: Checks for and quantifies species, endogenous animal DNA, human contamination and mitochondrial coverage.
-- **Modular workflow**: Structured via Snakemake for reproducibility, scalability, and manageability.
+- **Pathogen detection** – Automated pipeline to identify microbial or pathogen DNA in aDNA samples.  
+- **Animal endogenous screening** – Checks for and quantifies:
+  - Species-specific endogenous DNA  
+  - Human contamination  
+  - Mitochondrial genome coverage  
+- **Modular workflow** – Structured via Snakemake for reproducibility, scalability, and easy maintenance.
 
 ---
 
@@ -22,22 +25,20 @@ If not already installed:
 # Download Miniconda installer (Linux, Python 3)
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 
-# Install
+# Install Miniconda
 bash Miniconda3-latest-Linux-x86_64.sh
 
-# Follow prompts, then reload shell or source .bashrc
+# Follow prompts, then reload shell
 source ~/.bashrc
 
-### 1️⃣ Install Miniconda (Linux)
+### 2️⃣ Download PIGSTI and install Snakemake
 
-If not already installed:
+# Clone the repository
+git clone https://github.com/LouisLhote/PIGSTI.git
+cd PIGSTI
 
-```bash
-# Download Miniconda installer (Linux, Python 3)
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+# Create the conda environment from the provided YAML
+conda env create -n pigsti-snake -f PIGSTI_snakemake.yaml
 
-# Install
-bash Miniconda3-latest-Linux-x86_64.sh
-
-# Follow prompts, then reload shell or source .bashrc
-source ~/.bashrc
+# Activate the environment
+conda activate pigsti-snake
