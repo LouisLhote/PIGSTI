@@ -1,1135 +1,313 @@
-configfile: "config/config.yaml"
+#!/usr/bin/env python3
+"""
+Pathogen Detection Scoring System
+Implements a 10-point scoring system for pathogen detection based on multiple criteria:
+1. E-Score threshold passed (base criterion)
+2. Hops detection (at least 2 in hops output)
+3. Hops edit distance (3 in hops output)
+4. Hops damage (4 in hops output)
+5. ANI > 0.965
+6. 5′ C>T deamination ≥ 0.01
+7. 3′ G>A deamination ≥ 0.01
+8. Breadth ratio ≥ 0.8
+9. Entropy ≥ 0.9
+10. K-mer rank ≤ 2
+"""
 
-ruleorder: adapter_removal_pe > adapter_removal_se
-
-global_wildcard_constraints = {
-    "krakenuniq_name": r"[A-Za-z0-9_.-]+",
-    "sample": r"[A-Za-z0-9_.-]+",
-    "ref_name_safe": r"[^/]+"
-}
-
-import os
 import pandas as pd
-import re
-import csv
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+import os
+import glob
 from pathlib import Path
 
-
-# -------------------- Load sample info --------------------
-SAMPLES_DICT = {}
-with open("config/samples.tsv") as f:
-    reader = csv.DictReader(f, delimiter="\t")
-    for row in reader:
-        sample = row["sample"]
-        if sample not in SAMPLES_DICT:
-            SAMPLES_DICT[sample] = {"r1": [], "r2": []}
-        SAMPLES_DICT[sample]["r1"].append(row["r1"])
-        if row["r2"] and row["r2"].strip():
-            SAMPLES_DICT[sample]["r2"].append(row["r2"])
-
-SAMPLES = list(SAMPLES_DICT.keys())
-READ_GROUPS = {}
-with open("config/samples.tsv") as f:
-    reader = csv.DictReader(f, delimiter="\t")
-    for row in reader:
-        sample = row["sample"]
-        rglb = row["RGLB"]
-        sequencing_run = row["sequencing_run"]
-        rg_id = f"{rglb}_{sequencing_run}"
-        read_group = f"@RG\\tID:{rg_id}\\tPL:ILLUMINA\\tLB:{rglb}\\tSM:{sample}"
-        READ_GROUPS[sample] = read_group
-
-
-
-# Load spreadsheet once globally and strip columns once
-spreadsheet_df = pd.read_csv("config/Pathogen_spreadsheet.csv")
-spreadsheet_df.columns = spreadsheet_df.columns.str.strip()
-
-SAMPLE_REF_PAIRS = []
-
-for sample in SAMPLES:
-    escore_path = f"results/{sample}/Escore/pathogen/{sample}_pathogen.csv"
-    if not os.path.exists(escore_path):
-        continue
-    escore_df = pd.read_csv(escore_path)
-    escore_df["taxonomy"] = escore_df["taxonomy"].str.strip()
-    
-    # Only add pathogens from escore that are in master spreadsheet
-    for pathogen in escore_df["taxonomy"]:
-        if pathogen in spreadsheet_df["Krakenuniq name"].values:
-            SAMPLE_REF_PAIRS.append((sample, pathogen))
-
-
-
-
-def get_reference_path(wc):
-    row = spreadsheet_df[spreadsheet_df["Krakenuniq name"] == wc.krakenuniq_name]
-    if row.empty:
-        raise ValueError(f"No reference path found for {wc.krakenuniq_name}")
-    return row.iloc[0]["bwa index"]
-
-
-def get_bwa_targets(wildcards):
-    escore_path = f"results/{wildcards.sample}/Escore/pathogen/{wildcards.sample}_pathogen.csv"
-    if not os.path.exists(escore_path):
-        return []
-    escore_df = pd.read_csv(escore_path)
-    # Use the globally loaded spreadsheet_df here
-    targets = []
-    for pathogen in escore_df["name"]:
-        row = spreadsheet_df[spreadsheet_df["Krakenuniq name"] == pathogen]
-        if not row.empty:
-            krakenuniq_name = row.iloc[0]["Krakenuniq name"]
-            bam_path = f"results/{wildcards.sample}/bwa_final/q30/{krakenuniq_name}_F4_q30_sort.bam"
-            targets.append(bam_path)
-    return targets
-
-# rest of your code remains unchanged...
-
-
-
 def safe_name(name):
-    return name.replace(" ", "_")
+    """Convert pathogen name to safe filename format"""
+    return name.replace(" ", "_").replace("/", "_")
 
-SAMPLE_REF_PAIRS_SAFE = [(sample, safe_name(pathogen)) for sample, pathogen in SAMPLE_REF_PAIRS]
+def get_sample_ref_pairs(samples, spreadsheet_df):
+    """Get sample-pathogen pairs from escore results"""
+    pairs = []
+    for sample in samples:
+        escore_path = f"results/{sample}/Escore/pathogen/{sample}_pathogen.csv"
+        if os.path.exists(escore_path):
+            escore_df = pd.read_csv(escore_path)
+            escore_df["taxonomy"] = escore_df["taxonomy"].str.strip()
+            
+            # Only add pathogens from escore that are in master spreadsheet
+            for pathogen in escore_df["taxonomy"]:
+                if pathogen in spreadsheet_df["Krakenuniq name"].values:
+                    pairs.append((sample, pathogen))
+    return pairs
 
-# e.g. a wildcard target list
-ALL_BWA_TARGETS = [f"results/{sample}/bwa_pathogen/{sample}_{pathogen_safe}.sai" for sample, pathogen_safe in SAMPLE_REF_PAIRS_SAFE]
-
-
-print("SAMPLE_REF_PAIRS for all samples:")
-for s, p in SAMPLE_REF_PAIRS:
-    print(s, p)
-
-
-def get_reference_from_safe_name(ref_name_safe):
-    pathogen_name = ref_name_safe.replace("_", " ")
-    row = spreadsheet_df.loc[spreadsheet_df["Krakenuniq name"] == pathogen_name]
-    if row.empty:
-        raise ValueError(f"[ERROR] No bwa index found for pathogen name: '{pathogen_name}'")
-    return row.iloc[0]["bwa index"]
-
-zipped_pairs = [(s, safe_name(r)) for s, r in SAMPLE_REF_PAIRS]
-
-
-###--------------------------wrappers-----------------------------------------------------
-
-
-###-----------------------------------------------rules-------------------------------------------------------------------------------
-rule all:
-    input:
-        expand("results/{sample}/adapter_removal/{sample}.collapsed.gz", sample=SAMPLES),
-        expand("results/{sample}/krakenuniq/kraken-report.txt", sample=SAMPLES),
-        expand("results/{sample}/fastq_screen/{sample}.collapsed_screen.html", sample=SAMPLES),
-        expand("results/{sample}/fastq_screen/{sample}_best_species.txt", sample=SAMPLES),
-        expand("results/{sample}/krona/{sample}.html", sample=SAMPLES),
-
-        # Host alignments
-        expand("results/{sample}/bwa_host/{sample}_F4.bam", sample=SAMPLES),
-        expand("results/{sample}/bwa_host/{sample}_F4_q30.bam", sample=SAMPLES),
-        expand("results/{sample}/bwa_host/{sample}_F4_q30.sorted.bam", sample=SAMPLES),
-        expand("results/{sample}/bwa_host/{sample}.dedup.bam", sample=SAMPLES),
-        expand("results/{sample}/bwa_host/{sample}.dedup.metrics.txt", sample=SAMPLES),
-        expand("results/{sample}/bwa_host/{sample}_F4_q30.bam.bai", sample=SAMPLES),
-        expand("results/{sample}/bwa_host/{sample}.dedup.bam.bai", sample=SAMPLES),
-
-        # Host QC and damage
-        expand("results/{sample}/qualimap/genome_results.txt", sample=SAMPLES),
-        expand("results/{sample}/qualimap_mtdna/genome_results.txt", sample=SAMPLES),
-        expand("results/{sample}/damageprofiler_host", sample=SAMPLES),
-
-        # mtDNA alignments
-        expand("results/{sample}/bwa_mtdna/{sample}_F4.bam", sample=SAMPLES),
-        expand("results/{sample}/bwa_mtdna/{sample}_F4_q30.bam", sample=SAMPLES),
-        expand("results/{sample}/bwa_mtdna/{sample}.dedup.bam", sample=SAMPLES),
-        expand("results/{sample}/bwa_mtdna/{sample}.dedup.metrics.txt", sample=SAMPLES),
-        expand("results/{sample}/bwa_mtdna/{sample}_F4_q30.bam.bai", sample=SAMPLES),
-        expand("results/{sample}/bwa_mtdna/{sample}.dedup.bam.bai", sample=SAMPLES),
-
-        # mtDNA QC and damage
-        expand("results/{sample}/damageprofiler_mtdna", sample=SAMPLES),
-
-        # E-Score outputs
-        expand("results/{sample}/Escore/genus/{sample}_genus.csv", sample=SAMPLES),
-        expand("results/{sample}/Escore/species/{sample}_species.csv", sample=SAMPLES),
-        expand("results/{sample}/Escore/pathogen/{sample}_pathogen.csv", sample=SAMPLES),
-
-        # Comparison outputs
-        expand("results/comparison/{sample}_comparison.tsv", sample=SAMPLES),
-        expand("results/comparison/{sample}_heatmap.html", sample=SAMPLES),
-
-        #decom
-        "results/p_sink.txt",
-        expand("results/p_keys/{sample}.fof", sample=SAMPLES),
-        "results/decOM",
-
-        # Shared/global files
-        expand("results/{sample}/krakenuniq/output.txt", sample=SAMPLES),
-        "results/hops/maltExtract/heatmap_overview_Wevid.tsv",
-        "lists/krakenuniq_pathogen_list.txt",
-        "lists/hops_pathogen_list.txt",
-        "config/config_hops_custom.txt",
-        "results/KRAKENUNIQ_ABUNDANCE_MATRIX/krakenuniq_abundance_matrix_absolute.csv",
-        "results/KRAKENUNIQ_ABUNDANCE_MATRIX/krakenuniq_abundance_matrix_normalized.csv",
-        "results/KRAKENUNIQ_ABUNDANCE_MATRIX/heatmap_absolute.pdf",
-        "results/KRAKENUNIQ_ABUNDANCE_MATRIX/heatmap_normalized.pdf",
-
-        # All BWA pathogen targets
-        ALL_BWA_TARGETS,
-
-        # Pathogen plots and QC
-        expand(
-            "results/{sample}/bwa_pathogen/adnaplotter_{ref_name_safe}.pdf",
-            zip,
-            sample=[s for s, r in zipped_pairs],
-            ref_name_safe=[r for s, r in zipped_pairs]
-        ),
-        expand(
-            "results/{sample}/bwa_pathogen/qualimap_{ref_name_safe}",
-            zip,
-            sample=[s for s, r in zipped_pairs],
-            ref_name_safe=[r for s, r in zipped_pairs]
-        ),
-        expand(
-            "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.ani.txt",
-            zip,
-            sample=[s for s, r in zipped_pairs],
-            ref_name_safe=[r for s, r in zipped_pairs]
-        ),
-        expand(
-            "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.depth.txt",
-            zip,
-            sample=[s for s, r in zipped_pairs],
-            ref_name_safe=[r for s, r in zipped_pairs]
-        ),
-        expand(
-            "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.breadth.txt",
-            zip,
-            sample=[s for s, r in zipped_pairs],
-            ref_name_safe=[r for s, r in zipped_pairs]
-        ),
-        expand(
-            "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.expected_breadth.txt",
-            zip,
-            sample=[s for s, r in zipped_pairs],
-            ref_name_safe=[r for s, r in zipped_pairs]
-        ),
-        expand(
-            "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.breadth_ratio.txt",
-            zip,
-            sample=[s for s, r in zipped_pairs],
-            ref_name_safe=[r for s, r in zipped_pairs]
-        ),
-        expand(
-            "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.entropy_plot.png",
-            zip,
-            sample=[s for s, r in zipped_pairs],
-            ref_name_safe=[r for s, r in zipped_pairs]
-        ),
-        expand(
-            "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.mean_entropy.txt",
-            zip,
-            sample=[s for s, r in zipped_pairs],
-            ref_name_safe=[r for s, r in zipped_pairs]
-        ),
-        expand(
-            "results/{sample}/summary/{sample}_{ref_name_safe}_pathogen_report_merged.pdf",
-            zip,
-            sample=[s for s, r in zipped_pairs],
-            ref_name_safe=[r for s, r in zipped_pairs]
-        ),
-
-        # Final summary reports
-
-        expand("results/{sample}/summary/{sample}_pathogen_summary.csv", sample=SAMPLES),
-        "results/final/pathogen_summary_all_samples.xlsx",
-        "results/final/host_mtdna_summary_all_samples.xlsx"
-
-#--------------------list and configs files -------------------------------------------
-
-rule generate_pathogen_lists:
-    input:
-        spreadsheet = "config/Pathogen_spreadsheet.csv"
-    output:
-        kraken_list = "lists/krakenuniq_pathogen_list.txt",
-        hops_list = "lists/hops_pathogen_list.txt"
-    conda:
-        "workflow/envs/python.yaml"  # or your python env
-    shell:
-        """
-        python scripts/generate_pathogen_lists.py {input.spreadsheet}
-        """
-
-rule create_hops_config:
-    input:
-        original_config = "config/config_hops2.0.txt",
-        hops_list = "lists/hops_pathogen_list.txt"
-    output:
-        new_config = "config/config_hops_custom.txt"
-    conda:
-        "workflow/envs/python.yaml"
-    shell:
-        """
-        python scripts/create_hops_config.py {input.original_config} {output.new_config} {input.hops_list}
-        """
-
-rule select_best_pathogens:
-    input:
-        spreadsheet="config/Pathogen_spreadsheet.csv",
-        escore="results/{sample}/sample_pathogen.csv",
-        taxdump_dir="ncbi_taxdump/nodes.dmp"
-    output:
-        selected="results/{sample}/selected_pathogens.txt"
-    params:
-        sample="{sample}"
-    shell:
-        "python scripts/group_by_genus.py --sample {params.sample}"
-#-------------------bwa pathogen mapping----------------------------------------------
-rule bwa_aln:
-    input:
-        reads = "results/{sample}/unaligned_fastq/{sample}_unaligned.fastq.gz"
-    output:
-        sai = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.sai"
-    conda:
-        "workflow/envs/bwa.yaml"
-    threads: 6
-    params:
-        reference = lambda wc: spreadsheet_df.loc[
-            spreadsheet_df["Krakenuniq name"] == wc.ref_name_safe.replace("_", " "),
-            "bwa index"
-        ].values[0]
-    shell:
-        "bwa aln -l 1024 -n 0.01 -o 2 -t {threads} {params.reference} {input.reads} > {output.sai}"
-
-rule bwa_samse:
-    input:
-        sai = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.sai",
-        reads = "results/{sample}/unaligned_fastq/{sample}_unaligned.fastq.gz"
-    output:
-        bam = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}_F4.bam"
-    conda:
-        "workflow/envs/bwa.yaml"
-    params:
-        reference =  lambda wc: get_reference_from_safe_name(wc.ref_name_safe),
-        read_group = lambda wc: READ_GROUPS[wc.sample]
-
-    shell:
-        """
-        bwa samse -r '{params.read_group}' {params.reference} {input.sai} {input.reads} | \
-        samtools view -F 4 -Sb - > {output.bam}
-        """
-
-rule bwa_sort:
-    input: "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}_F4.bam"
-    output: "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}_F4.sorted.bam"
-    conda: "workflow/envs/bwa.yaml"
-    shell: "samtools sort {input} -o {output}"
-
-rule bwa_q30:
-    input: "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}_F4.sorted.bam"
-    output: "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}_F4_q30.bam"
-    conda: "workflow/envs/bwa.yaml"
-    shell: "samtools view -q 30 -o {output} {input}"
-
-rule bwa_q30_sort:
-    input:
-        "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}_F4_q30.bam"
-    output:
-        "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}_F4_q30_sort.bam"
-    conda:
-        "workflow/envs/samtools.yaml"
-    shell:
-        "samtools sort {input} -o {output}"
-
-rule mark_duplicates:
-    input:
-        bam = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}_F4_q30_sort.bam"
-    output:
-        dedup = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam",
-        metrics = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.metrics.txt"
-    conda: "workflow/envs/picard.yaml"
-    shell:
-        """
-        picard MarkDuplicates \
-            I={input.bam} \
-            O={output.dedup} \
-            M={output.metrics} \
-            REMOVE_DUPLICATES=true \
-            ASSUME_SORTED=true \
-            VALIDATION_STRINGENCY=SILENT
-        """
-
-rule index_dedup_bam:
-    input:
-        bam = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam"
-    output:
-        bai = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam.bai"
-    conda: "workflow/envs/samtools.yaml"
-    shell: "samtools index {input.bam}"
-
-rule qualimap_bamqc_bwa:
-    input:
-        bam = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam"
-    output:
-        report = directory("results/{sample}/bwa_pathogen/qualimap_{ref_name_safe}")
-    log:
-        "logs/qualimap/{sample}_{ref_name_safe}.log"
-    conda: "workflow/envs/qualimap.yaml"
-    shell:
-        """
-        qualimap bamqc \
-            -bam {input.bam} \
-            -outdir {output.report} \
-            -outformat html > {log} 2>&1
-        """
-def get_ref_path(wc):
-    ref_name_clean = wc.ref_name_safe.split("/")[0]  # strip anything after slash
-    matches = spreadsheet_df.loc[
-        spreadsheet_df["Krakenuniq name"] == ref_name_clean.replace("_", " "),
-        "bwa index"
-    ].values
-    if len(matches) == 0:
-        raise ValueError(f"No bwa index found for reference: {ref_name_clean}")
-    return matches[0]
-
-
-rule damageprofiler:
-    input:
-        bam = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam",
-        ref = get_ref_path
-    output:
-        directory("results/{sample}/bwa_pathogen/damageprofiler_{ref_name_safe}")
-    conda: "workflow/envs/damageprofiler.yaml"
-    shell:
-        "damageprofiler -i {input.bam} -o {output} -r {input.ref}"
-rule adna_bamplotter:
-    input:
-        bam = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam",
-        bai = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam.bai",
-        dpdir = "results/{sample}/bwa_pathogen/damageprofiler_{ref_name_safe}/"
-    output:
-        pdf = "results/{sample}/bwa_pathogen/adnaplotter_{ref_name_safe}.pdf"
-    conda: "workflow/envs/adna_plotter.yaml"
-    shell:
-        """
-        python scripts/aDNA-BAMPlotter.py \
-            -b {input.bam} \
-            -d {input.dpdir}/misincorporation.txt \
-            -o {output.pdf}
-        """
-rule Compute_ANI:
-    input:
-        bam="results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam"
-    output:
-        ani="results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.ani.txt"
-    log:
-        "logs/ANI/{sample}_{ref_name_safe}.log"
-    threads: 1
-    conda:
-        "workflow/envs/samtools.yaml"  # ensure samtools is included
-    message:
-        "Compute_ANI: Calculating ANI for {input.bam}"
-    shell:
-        """
-        samtools stats {input.bam} 2>> {log} | \
-        awk '/^SN/ && /mismatches:/ {{mis=$3}} /^SN/ && /bases mapped:/ {{map=$4}} \
-        END {{if (map > 0) printf("ANI ≈ %.2f%%\\n", (1 - mis/map)*100); else print "No mapped bases!"}}' \
-        > {output.ani}
-        """
-
-rule MappingStats:
-    input:
-        bam="results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam"
-    output:
-        depth="results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.depth.txt",
-        breadth="results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.breadth.txt",
-        expected_breadth="results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.expected_breadth.txt",
-        ratio="results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.breadth_ratio.txt"
-    conda:
-        "workflow/envs/qc.yaml"
-    script:
-        "scripts/calculate_breadth_stats.py"
-
-
-rule EntropyProfile:
-    input:
-        bam="results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam"
-    output:
-        plot="results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.entropy_plot.png",
-        summary="results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.mean_entropy.txt"
-    conda:
-        "workflow/envs/qc.yaml"
-    shell:
-        """
-        python scripts/calculate_entropy_profile.py \
-            {input.bam} {output.plot} {output.summary}
-        """
-
-
-##plus---------------
-
-
-
-
-# -------------------- Pathogen Tracker Preprocessing -----------------------
-
-rule adapter_removal_pe:
-    input:
-        r1 = lambda wc: SAMPLES_DICT[wc.sample]["r1"][0],
-        r2 = lambda wc: SAMPLES_DICT[wc.sample]["r2"][0]
-    output:
-        collapsed = "results/{sample}/adapter_removal/{sample}.collapsed.gz"
-    conda:
-        "workflow/envs/adapterremoval.yaml"
-    threads: 6
-    shell:
-        """
-        AdapterRemoval --file1 {input.r1} --file2 {input.r2} \
-        --basename results/{wildcards.sample}/adapter_removal/{wildcards.sample} \
-        --threads {threads} --collapse --minadapteroverlap 1 \
-        --adapter1 AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC \
-        --adapter2 AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT \
-        --minlength 30 --gzip --trimns --trimqualities
-        """
-
-rule adapter_removal_se:
-    input:
-        r1 = lambda wc: SAMPLES_DICT[wc.sample]["r1"][0]
-    output:
-        collapsed = "results/{sample}/adapter_removal/{sample}.collapsed.gz"
-    conda:
-        "workflow/envs/adapterremoval.yaml"
-    threads: 6
-    shell:
-        """
-        cutadapt -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC \
-                 -O 1 -m 30 \
-                 {input.r1} -o {output.collapsed} -j {threads}
-        """
-
-
-rule fastq_screen:
-    input:
-        collapsed="results/{sample}/adapter_removal/{sample}.collapsed.gz"
-    output:
-        html="results/{sample}/fastq_screen/{sample}.collapsed_screen.html",
-        txt="results/{sample}/fastq_screen/{sample}.collapsed_screen.txt"
-    threads: 4
-    shell:
-        "/raid_md0/Software/FastQ-Screen-0.15.2/fastq_screen "
-        "-conf /home/kdaly/fastq_screen.conf "
-        "{input.collapsed} "
-        "--outdir results/{wildcards.sample}/fastq_screen"
-
-rule prinseq:
-    input:
-        collapsed="results/{sample}/adapter_removal/{sample}.collapsed.gz"
-    output:
-        passed="results/{sample}/prinseq/{sample}-passed.fq.gz"
-    threads: 6
-    conda:
-        "workflow/envs/prinseq.yaml"
-    shell:
-        """
-        prinseq++ -fastq {input.collapsed} -derep 14 \
-        -out_good results/{wildcards.sample}/prinseq/{wildcards.sample}-passed.fq \
-        -VERBOSE 2 -threads {threads}
-        pigz results/{wildcards.sample}/prinseq/{wildcards.sample}-passed.fq
-        """
-
-rule bowtie2_unaligned:
-    input:
-        passed="results/{sample}/prinseq/{sample}-passed.fq.gz"
-    output:
-        bam="results/{sample}/bowtie2/{sample}_unaligned.bam"
-    threads: 6
-    conda:
-        "workflow/envs/bowtie2.yaml"
-    shell:
-        """
-        bowtie2 -x {config[host_index]} -U {input.passed} -p {threads} | \
-        samtools view -Sb - -f4 > {output.bam}
-        """
-
-rule bam_to_fastq:
-    input:
-        bam="results/{sample}/bowtie2/{sample}_unaligned.bam"
-    output:
-        fastq="results/{sample}/unaligned_fastq/{sample}_unaligned.fastq.gz"
-    threads: 2
-    conda:
-        "workflow/envs/samtools.yaml"
-    shell:
-        "samtools bam2fq {input.bam} -@{threads} | pigz - > {output.fastq}"
-
-rule krakenuniq:
-    input:
-        fastq="results/{sample}/unaligned_fastq/{sample}_unaligned.fastq.gz"
-    output:
-        report="results/{sample}/krakenuniq/kraken-report.txt",
-        output="results/{sample}/krakenuniq/output.txt"
-    threads: 8
-    conda:
-        "workflow/envs/krakenuniq.yaml"
-    shell:
-        """
-        krakenuniq --preload --db {config[kraken_db]} --fastq-input {input.fastq} \
-        --threads {threads} --output {output.output} --report-file {output.report} \
-        --gzip-compressed --only-classified-out
-        """
-rule escore:
-    input:
-        report="results/{sample}/krakenuniq/kraken-report.txt",
-        config="config/config.yaml"
-    output:
-        genus="results/{sample}/Escore/genus/{sample}_genus.csv",
-        species="results/{sample}/Escore/species/{sample}_species.csv",
-        pathogen="results/{sample}/Escore/pathogen/{sample}_pathogen.csv"
-    conda:
-        "workflow/envs/escore.yaml"
-    params:
-        script="scripts/dExp_Escore.py"
-    shell:
-        """
-        python {params.script} {input.report} {output.genus} {output.species} {output.pathogen} {input.config}
-        """
-rule parse_fastq_screen:
-    input:
-        "results/{sample}/fastq_screen/{sample}.collapsed_screen.txt"
-    output:
-        "results/{sample}/fastq_screen/{sample}_best_species.txt"
-    params:
-        exclude_human=True
-    script:
-        "scripts/parse_fastq_screen.py"
+def calculate_detection_score(sample, pathogen, escore_data, hops_data, bwa_data, 
+                            damage_data, breadth_data, entropy_data, comparison_data):
+    """
+    Calculate detection score based on all 10 criteria
+    Returns: (total_score, detailed_scores_dict)
+    """
+    score = 0
+    detailed_scores = {}
     
+    # 0. E-Score threshold passed (base criterion)
+    escore_file = f"results/{sample}/Escore/pathogen/{sample}_pathogen.csv"
+    if os.path.exists(escore_file):
+        escore_df = pd.read_csv(escore_file)
+        # Strip leading spaces from taxonomy column
+        escore_df['taxonomy'] = escore_df['taxonomy'].str.strip()
+        pathogen_row = escore_df[escore_df['taxonomy'] == pathogen]
+        if not pathogen_row.empty:
+            # Since these are already filtered by user thresholds, they get +1
+            score += 1
+            detailed_scores['escore_threshold'] = 1
+        else:
+            detailed_scores['escore_threshold'] = 0
+    else:
+        detailed_scores['escore_threshold'] = 0
+    
+    # 1. Hops detection (at least 2 in hops output)
+    hops_key = f"{sample}_{pathogen}"
+    if hops_key in hops_data and hops_data[hops_key] >= 2:
+        score += 1
+        detailed_scores['hops_detection'] = 1
+    else:
+        detailed_scores['hops_detection'] = 0
+    
+    # 2. Hops edit distance (3 in hops output)
+    if hops_key in hops_data and hops_data[hops_key] >= 3:
+        score += 1
+        detailed_scores['hops_edit_distance'] = 1
+    else:
+        detailed_scores['hops_edit_distance'] = 0
+    
+    # 3. Hops damage (4 in hops output)
+    if hops_key in hops_data and hops_data[hops_key] >= 4:
+        score += 1
+        detailed_scores['hops_damage'] = 1
+    else:
+        detailed_scores['hops_damage'] = 0
+    
+    # 4. ANI > 0.965
+    ani_file = f"results/{sample}/bwa_pathogen/{sample}_{safe_name(pathogen)}.ani.txt"
+    if os.path.exists(ani_file):
+        try:
+            ani_content = open(ani_file).read().strip()
+            # Extract ANI value from the file
+            if "ANI ≈" in ani_content:
+                ani_value = float(ani_content.split("ANI ≈ ")[1].split("%")[0])
+                if ani_value > 96.5:  # Convert percentage to decimal
+                    score += 1
+                    detailed_scores['ani_threshold'] = 1
+                else:
+                    detailed_scores['ani_threshold'] = 0
+            else:
+                detailed_scores['ani_threshold'] = 0
+        except:
+            detailed_scores['ani_threshold'] = 0
+    else:
+        detailed_scores['ani_threshold'] = 0
+    
+    # 5. 5′ C>T deamination ≥ 0.01
+    damage_file = f"results/{sample}/bwa_pathogen/damageprofiler_{safe_name(pathogen)}/misincorporation.txt"
+    # Check if the damageprofiler directory exists (from snakemake input)
+    damage_dir = f"results/{sample}/bwa_pathogen/damageprofiler_{safe_name(pathogen)}"
+    if os.path.exists(damage_file) and os.path.exists(damage_dir):
+        try:
+            damage_df = pd.read_csv(damage_file, sep='\t')
+            # Find 5′ C>T rate (adjust column names based on your damageprofiler output)
+            if 'Position' in damage_df.columns and 'C>T' in damage_df.columns:
+                c_to_t_row = damage_df[damage_df['Position'] == '5']
+                if not c_to_t_row.empty:
+                    c_to_t_rate = float(c_to_t_row['C>T'].iloc[0])
+                    if c_to_t_rate >= 0.01:
+                        score += 1
+                        detailed_scores['c_to_t_deamination'] = 1
+                    else:
+                        detailed_scores['c_to_t_deamination'] = 0
+                else:
+                    detailed_scores['c_to_t_deamination'] = 0
+            else:
+                detailed_scores['c_to_t_deamination'] = 0
+        except:
+            detailed_scores['c_to_t_deamination'] = 0
+    else:
+        detailed_scores['c_to_t_deamination'] = 0
+    
+    # 6. 3′ G>A deamination ≥ 0.01
+    if os.path.exists(damage_file) and os.path.exists(damage_dir):
+        try:
+            damage_df = pd.read_csv(damage_file, sep='\t')
+            if 'Position' in damage_df.columns and 'G>A' in damage_df.columns:
+                g_to_a_row = damage_df[damage_df['Position'] == '3']
+                if not g_to_a_row.empty:
+                    g_to_a_rate = float(g_to_a_row['G>A'].iloc[0])
+                    if g_to_a_rate >= 0.01:
+                        score += 1
+                        detailed_scores['g_to_a_deamination'] = 1
+                    else:
+                        detailed_scores['g_to_a_deamination'] = 0
+                else:
+                    detailed_scores['g_to_a_deamination'] = 0
+            else:
+                detailed_scores['g_to_a_deamination'] = 0
+        except:
+            detailed_scores['g_to_a_deamination'] = 0
+    else:
+        detailed_scores['g_to_a_deamination'] = 0
+    
+    # 7. Breadth ratio ≥ 0.8
+    breadth_file = f"results/{sample}/bwa_pathogen/{sample}_{safe_name(pathogen)}.breadth_ratio.txt"
+    if os.path.exists(breadth_file):
+        try:
+            breadth_ratio = float(open(breadth_file).read().strip())
+            if breadth_ratio >= 0.8:
+                score += 1
+                detailed_scores['breadth_ratio'] = 1
+            else:
+                detailed_scores['breadth_ratio'] = 0
+        except:
+            detailed_scores['breadth_ratio'] = 0
+    else:
+        detailed_scores['breadth_ratio'] = 0
+    
+    # 8. Entropy ≥ 0.9
+    entropy_file = f"results/{sample}/bwa_pathogen/{sample}_{safe_name(pathogen)}.mean_entropy.txt"
+    if os.path.exists(entropy_file):
+        try:
+            entropy = float(open(entropy_file).read().strip())
+            if entropy >= 0.9:
+                score += 1
+                detailed_scores['entropy'] = 1
+            else:
+                detailed_scores['entropy'] = 0
+        except:
+            detailed_scores['entropy'] = 0
+    else:
+        detailed_scores['entropy'] = 0
+    
+    # 9. K-mer rank ≤ 2 (from comparison results)
+    comparison_file = f"results/comparison/{sample}_comparison.tsv"
+    if os.path.exists(comparison_file):
+        try:
+            comp_df = pd.read_csv(comparison_file, sep='\t')
+            pathogen_row = comp_df[comp_df['pathogen'] == pathogen]
+            if not pathogen_row.empty:
+                # Adjust column name based on your comparison output
+                kmer_rank_col = 'kmer_rank' if 'kmer_rank' in pathogen_row.columns else 'rank'
+                if kmer_rank_col in pathogen_row.columns:
+                    kmer_rank = pathogen_row[kmer_rank_col].iloc[0]
+                    if kmer_rank <= 2:
+                        score += 1
+                        detailed_scores['kmer_rank'] = 1
+                    else:
+                        detailed_scores['kmer_rank'] = 0
+                else:
+                    detailed_scores['kmer_rank'] = 0
+            else:
+                detailed_scores['kmer_rank'] = 0
+        except:
+            detailed_scores['kmer_rank'] = 0
+    else:
+        detailed_scores['kmer_rank'] = 0
+    
+    return score, detailed_scores
 
-rule hops:
-    input:
-        genus=expand("results/{sample}/Escore/genus/{sample}_genus.csv", sample=SAMPLES),
-        species=expand("results/{sample}/Escore/species/{sample}_species.csv", sample=SAMPLES),
-        pathogen=expand("results/{sample}/Escore/pathogen/{sample}_pathogen.csv", sample=SAMPLES),
-        fq=expand("results/{sample}/unaligned_fastq/{sample}_unaligned.fastq.gz", sample=SAMPLES)
-    output:
-        heatmap="results/hops/maltExtract/heatmap_overview_Wevid.tsv"
-    params:
-        config="config/config_hops_custom.txt"
-    conda:
-        "workflow/envs/hops.yaml"
-    shell:
-        """
-        hops -Xmx800G -input {input.fq} -output results/hops -m full -c {params.config}
-        """
+def main():
+    # Load spreadsheet data
+    spreadsheet_df = pd.read_csv("config/Pathogen_spreadsheet.csv")
+    spreadsheet_df.columns = spreadsheet_df.columns.str.strip()
+    
+    # Load SAMPLES from the Snakefile (you might need to adjust this)
+    # For now, let's get samples from the escore files
+    sample_dirs = glob.glob("results/*/Escore/pathogen/*_pathogen.csv")
+    SAMPLES = [os.path.basename(f).replace("_pathogen.csv", "") for f in sample_dirs]
+    
+    # Load hops data
+    hops_df = pd.read_csv(snakemake.input.hops_results, sep='\t')
+    print(f"Hops data columns: {list(hops_df.columns)}")
+    print(f"Hops data shape: {hops_df.shape}")
+    print(f"First few rows of hops data:")
+    print(hops_df.head())
+    
+    # Process hops data into dictionary for easy lookup
+    # The format is: pathogen_name, sample1_score, sample2_score, etc.
+    hops_data = {}
+    
+    # Get sample names from column headers (remove the .rma6 extension)
+    sample_cols = [col for col in hops_df.columns if col != 'node']
+    sample_names = [col.replace('_unaligned.rma6', '') for col in sample_cols]
+    
+    print(f"Sample names extracted: {sample_names}")
+    
+    for _, row in hops_df.iterrows():
+        pathogen_name = row['node'].strip('"')  # Remove quotes
+        
+        # Find the corresponding Krakenuniq name using the Hops name from spreadsheet
+        pathogen_row = spreadsheet_df[spreadsheet_df['Hops name'] == pathogen_name]
+        if not pathogen_row.empty:
+            krakenuniq_name = pathogen_row['Krakenuniq name'].iloc[0]
+            print(f"Processing pathogen: {pathogen_name} -> {krakenuniq_name}")
+            
+            # For each sample, create a key and store the score
+            for i, sample in enumerate(sample_names):
+                score = row[sample_cols[i]]
+                key = f"{sample}_{krakenuniq_name}"
+                hops_data[key] = score
+                print(f"  {key}: {score}")
+        else:
+            print(f"Warning: No matching entry found for hops pathogen: {pathogen_name}")
+    
+    # Calculate scores for all sample-pathogen pairs
+    all_scores = []
+    detailed_scores_list = []
+    
+    for sample, pathogen in get_sample_ref_pairs(SAMPLES, spreadsheet_df):
+        score, detailed = calculate_detection_score(
+            sample, pathogen, None, hops_data, None, 
+            None, None, None, None
+        )
+        
+        all_scores.append({
+            'sample': sample,
+            'pathogen': pathogen,
+            'total_score': score,
+            'max_possible_score': 10  # Total number of criteria
+        })
+        
+        detailed['sample'] = sample
+        detailed['pathogen'] = pathogen
+        detailed_scores_list.append(detailed)
+    
+    # Create matrices
+    if all_scores:
+        scores_df = pd.DataFrame(all_scores)
+        matrix = scores_df.pivot(index='sample', columns='pathogen', values='total_score')
+        
+        # Save results
+        matrix.to_csv(snakemake.output.scores_matrix)
+        pd.DataFrame(detailed_scores_list).to_csv(snakemake.output.detailed_scores, index=False)
+        
+        # Create heatmap
+        plt.figure(figsize=(15, 10))
+        sns.heatmap(matrix, annot=True, cmap='RdYlBu_r', 
+                    cbar_kws={'label': 'Detection Score (0-10)'})
+        plt.title('Pathogen Detection Scores\n(Criteria: E-Score, Hops(3), ANI, Damage(2), Breadth, Entropy, K-mer Rank)')
+        plt.tight_layout()
+        plt.savefig(snakemake.output.scores_heatmap, dpi=300, bbox_inches='tight')
+        
+        print(f"Scoring completed for {len(all_scores)} sample-pathogen pairs")
+        print(f"Average score: {scores_df['total_score'].mean():.2f}/10")
+        print(f"Score distribution:")
+        print(scores_df['total_score'].value_counts().sort_index())
+    else:
+        print("No sample-pathogen pairs found for scoring")
+        # Create empty files
+        pd.DataFrame().to_csv(snakemake.output.scores_matrix)
+        pd.DataFrame().to_csv(snakemake.output.detailed_scores)
+        plt.figure(figsize=(10, 8))
+        plt.text(0.5, 0.5, 'No pathogens detected', ha='center', va='center', transform=plt.gca().transAxes)
+        plt.savefig(snakemake.output.scores_heatmap)
 
-rule compare_pathogens:
-    input:
-        escore="results/{sample}/Escore/pathogen/{sample}_pathogen.csv",
-        hops="results/hops/maltExtract/heatmap_overview_Wevid.tsv",
-        spreadsheet="config/Pathogen_spreadsheet.csv"
-    output:
-        tsv="results/comparison/{sample}_comparison.tsv",
-        html="results/comparison/{sample}_heatmap.html"
-    params:
-        sample="{sample}"
-    conda:
-        "workflow/envs/compare_pathogens.yaml"
-    shell:
-        "python scripts/compare_pathogens.py {input.escore} {input.hops} {params.sample} {input.spreadsheet}"
-
-
-##------------------------------------------Microbiome--------------------#######################
-
-rule gather_sinks:
-    input:
-        fastqs=expand("results/{sample}/unaligned_fastq/{sample}_unaligned.fastq.gz", sample=SAMPLES)
-    output:
-        sink_txt="results/p_sink.txt",
-        fof_files=expand("results/p_keys/{sample}.fof", sample=SAMPLES)
-    run:
-        import os
-        os.makedirs("results/p_keys", exist_ok=True)
-        with open(output.sink_txt, "w") as f_sink:
-            for sample in SAMPLES:
-                f_sink.write(sample + "\n")
-                with open(f"results/p_keys/{sample}.fof", "w") as f_fof:
-                    f_fof.write(f"{sample}: results/{sample}/unaligned_fastq/{sample}_unaligned.fastq.gz\n")
-
-
-rule decom_run:
-    input:
-        p_sink="results/p_sink.txt",
-        fof_files=expand("results/p_keys/{sample}.fof", sample=SAMPLES)
-    output:
-        directory("results/decOM")
-    params:
-        p_sources=config["decOM_sources"],
-        memory="64GB",
-        threads=8
-    conda:
-        "workflow/envs/decom.yaml"
-    log:
-        "logs/decom_run.log"
-    shell:
-        """
-    rm -rf {output}
-    decOM -p_sinks {input.p_sink} \
-          -p_sources {params.p_sources} \
-          -p_keys results/p_keys/ \
-          -mem {params.memory} \
-          -t {params.threads} \
-          -o {output} || true
-
-        """
-
-
-rule update_krona_taxonomy:
-    conda:
-        "workflow/envs/krona.yaml"
-    output:
-        touch("taxonomy/.updated")  # a dummy file to mark completion
-    shell:
-        """
-        # Make sure taxonomy dir exists
-        mkdir -p taxonomy
-        # Run taxonomy update script; adjust path if needed
-        ktUpdateTaxonomy.sh
-        # Touch the marker file to signal completion
-        touch {output}
-        """
-
-rule krakenuniq_to_krona:
-    input:
-        kraken_report="results/{sample}/krakenuniq/kraken-report.txt",
-        taxonomy_update="taxonomy/.updated"  # dependency on taxonomy update
-    output:
-        "results/{sample}/krona/{sample}.html"
-    conda:
-        "workflow/envs/krona.yaml"
-    shell:
-        """
-        mkdir -p results/{wildcards.sample}/krona
-        ktImportTaxonomy -t 5 -m 3 -o {output} {input.kraken_report}
-        """
-
-
-rule krakenuniq_abundance_matrix:
-    input:
-        reports = expand("results/{sample}/krakenuniq/kraken-report.txt", sample=SAMPLES),
-        script1 = "scripts/krakenuniq_abundance_matrix.R",
-        script2 = "scripts/plot_krakenuniq_abundance_matrix.R"
-    output:
-        matrix = "results/KRAKENUNIQ_ABUNDANCE_MATRIX/krakenuniq_abundance_matrix_absolute.csv",
-        matrix_norm = "results/KRAKENUNIQ_ABUNDANCE_MATRIX/krakenuniq_abundance_matrix_normalized.csv",
-        abs_plot = "results/KRAKENUNIQ_ABUNDANCE_MATRIX/heatmap_absolute.pdf",
-        norm_plot = "results/KRAKENUNIQ_ABUNDANCE_MATRIX/heatmap_normalized.pdf"
-    conda:
-        "workflow/envs/r.yaml"
-    shell:
-        """
-        Rscript {input.script1} results results/KRAKENUNIQ_ABUNDANCE_MATRIX 1000 25
-        Rscript {input.script2} results/KRAKENUNIQ_ABUNDANCE_MATRIX {output.abs_plot} {output.norm_plot}
-        """
-
-# -------------------- Host bwa aln Mapping -----------------------------
-rule bwa_aln_host:
-    input:
-        reads = "results/{sample}/adapter_removal/{sample}.collapsed.gz",
-        species = "results/{sample}/fastq_screen/{sample}_best_species.txt"
-    output:
-        bam = "results/{sample}/bwa_host/{sample}_F4.bam"
-    threads: 6
-    conda:
-        "workflow/envs/bwa.yaml"
-    script:
-        "scripts/bwa_aln_host.py"
-
-
-rule sort_bam_initial_bwa_host:
-    input:
-        bam = "results/{sample}/bwa_host/{sample}_F4.bam"
-    output:
-        bam = "results/{sample}/bwa_host/{sample}_F4.sorted.bam"
-    threads: 4
-    conda:
-        "workflow/envs/samtools.yaml"
-    shell:
-        "samtools sort -@ {threads} -o {output.bam} {input.bam}"
-
-rule filter_q30_bwa_host:
-    input:
-        bam = "results/{sample}/bwa_host/{sample}_F4.sorted.bam"
-    output:
-        bam = "results/{sample}/bwa_host/{sample}_F4_q30.bam"
-    threads: 4
-    conda:
-        "workflow/envs/samtools.yaml"
-    shell:
-        "samtools view -q 30 -@ {threads} -b {input.bam} -o {output.bam}"
-
-rule index_q30_bam_host:
-    input:
-        bam = "results/{sample}/bwa_host/{sample}_F4_q30.bam"
-    output:
-        bai = "results/{sample}/bwa_host/{sample}_F4_q30.bam.bai"
-    conda:
-        "workflow/envs/samtools.yaml"
-    shell:
-        "samtools index {input.bam}"
-
-
-rule sort_q30_bam_bwa_host:
-    input:
-        bam = "results/{sample}/bwa_host/{sample}_F4_q30.bam"
-    output:
-        bam = "results/{sample}/bwa_host/{sample}_F4_q30.sorted.bam"
-    threads: 4
-    conda:
-        "workflow/envs/samtools.yaml"
-    shell:
-        "samtools sort -@ {threads} -o {output.bam} {input.bam}"
-
-rule mark_duplicates_host:
-    input:
-        bam = "results/{sample}/bwa_host/{sample}_F4_q30.sorted.bam"
-    output:
-        bam = "results/{sample}/bwa_host/{sample}.dedup.bam",
-        metrics = "results/{sample}/bwa_host/{sample}.dedup.metrics.txt"
-    threads: 4
-    conda: "workflow/envs/picard.yaml"
-    shell:
-        """
-        java -jar /raid_md0/Software/picard.jar MarkDuplicates \
-            I={input.bam} \
-            O={output.bam} \
-            M={output.metrics} \
-            REMOVE_DUPLICATES=true \
-            ASSUME_SORTED=true \
-            VALIDATION_STRINGENCY=SILENT
-        """
-rule index_dedup_bam_host:
-    input:
-        bam = "results/{sample}/bwa_host/{sample}.dedup.bam"
-    output:
-        bai = "results/{sample}/bwa_host/{sample}.dedup.bam.bai"
-    conda:
-        "workflow/envs/samtools.yaml"
-    shell:
-        "samtools index {input.bam}"
-
-
-rule qualimap_bamqc_bwa_host:
-    input:
-        bam = "results/{sample}/bwa_host/{sample}.dedup.bam"
-    output:
-        txt = "results/{sample}/qualimap/genome_results.txt"
-    log:
-        "logs/qualimap/{sample}.log"
-    conda:
-        "workflow/envs/qualimap.yaml"
-    shell:
-        """
-        mkdir -p results/{wildcards.sample}/qualimap
-        qualimap --java-mem-size=9G \
-                 bamqc \
-                 -bam {input.bam} \
-                 -outdir results/{wildcards.sample}/qualimap \
-                 > {log} 2>&1
-        """
-
-rule damage_profiler_host:
-    input:
-        bam = "results/{sample}/bwa_host/{sample}.dedup.bam",
-        species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt",
-        config = "config/config.yaml"
-    output:
-        dir = directory("results/{sample}/damageprofiler_host/")
-    log:
-        "logs/damageprofiler/{sample}.log"
-    conda:
-        "workflow/envs/damageprofiler.yaml"
-    shell:
-        """
-        mkdir -p {output.dir}
-
-        species=$(cat {input.species_file})
-
-        ref=$(python -c "import yaml; cfg = yaml.safe_load(open('{input.config}')); print(cfg['bwa_indices'].get('${{species}}', ''))")
-        if [ -z "$ref" ]; then
-            echo "Reference for species '$species' not found in {input.config}" >&2
-            exit 1
-        fi
-
-        damageprofiler -Xmx12G \
-            -i {input.bam} \
-            -o {output.dir} \
-            -r "$ref" > {log} 2>&1
-        """
-
-rule softclip_cram_host:
-    input:
-        bam = "results/{sample}/bwa_host/{sample}.dedup.bam",
-        ref = lambda wc: config["bwa_indices"][
-            open(f"results/{wc.sample}/fastq_screen/{wc.sample}_best_species.txt").read().strip()
-        ]
-    output:
-        cram = "results/{sample}/bwa_host/{sample}.dedup_q30_softclipped.cram"
-    threads: 4
-    conda: "workflow/envs/samtools.yaml"  # Or a custom env with Python2 + samtools if needed
-    shell:
-        """
-        samtools view -h {input.bam} | \
-        python2 /home/kdaly/programs/scripts_for_goat_project/softclip_mod.py - 4 | \
-        samtools view -@ {threads} -T {input.ref} -O CRAM -o {output.cram}
-        """
-
-
-####-----------------------------------------------------########mtDNA mapping#####----------------------------------------------------------------------------
-rule bwa_aln_mtdna:
-    input:
-        reads = "results/{sample}/adapter_removal/{sample}.collapsed.gz",
-        species = "results/{sample}/fastq_screen/{sample}_best_species.txt"
-    output:
-        bam = "results/{sample}/bwa_mtdna/{sample}_F4.bam"
-    threads: 6
-    conda:
-        "workflow/envs/bwa.yaml"
-    script:
-        "scripts/bwa_aln_mtdna.py"
-
-
-rule sort_bam_initial_bwa_mtdna:
-    input:
-        bam = "results/{sample}/bwa_mtdna/{sample}_F4.bam"
-    output:
-        bam = "results/{sample}/bwa_mtdna/{sample}_F4.sorted.bam"
-    threads: 4
-    conda:
-        "workflow/envs/samtools.yaml"
-    shell:
-        "samtools sort -@ {threads} -o {output.bam} {input.bam}"
-
-
-rule filter_q30_bwa_mtdna:
-    input:
-        bam = "results/{sample}/bwa_mtdna/{sample}_F4.sorted.bam"
-    output:
-        bam = "results/{sample}/bwa_mtdna/{sample}_F4_q30.bam"
-    threads: 4
-    conda:
-        "workflow/envs/samtools.yaml"
-    shell:
-        "samtools view -q 30 -@ {threads} -b {input.bam} -o {output.bam}"
-
-rule index_q30_bam_mtdna:
-    input:
-        bam = "results/{sample}/bwa_mtdna/{sample}_F4_q30.bam"
-    output:
-        bai = "results/{sample}/bwa_mtdna/{sample}_F4_q30.bam.bai"
-    conda:
-        "workflow/envs/samtools.yaml"
-    shell:
-        "samtools index {input.bam}"
-
-
-rule sort_q30_bam_bwa_mtdna:
-    input:
-        bam = "results/{sample}/bwa_mtdna/{sample}_F4_q30.bam"
-    output:
-        bam = "results/{sample}/bwa_mtdna/{sample}_F4_q30.sorted.bam"
-    threads: 4
-    conda:
-        "workflow/envs/samtools.yaml"
-    shell:
-        "samtools sort -@ {threads} -o {output.bam} {input.bam}"
-
-
-rule mark_duplicates_mtdna:
-    input:
-        bam = "results/{sample}/bwa_mtdna/{sample}_F4_q30.sorted.bam"
-    output:
-        bam = "results/{sample}/bwa_mtdna/{sample}.dedup.bam",
-        metrics = "results/{sample}/bwa_mtdna/{sample}.dedup.metrics.txt"
-    threads: 4
-    conda: "workflow/envs/picard.yaml"
-    shell:
-        """
-        java -jar /raid_md0/Software/picard.jar MarkDuplicates \
-            I={input.bam} \
-            O={output.bam} \
-            M={output.metrics} \
-            REMOVE_DUPLICATES=true \
-            ASSUME_SORTED=true \
-            VALIDATION_STRINGENCY=SILENT
-        """
-rule index_dedup_bam_mtdna:
-    input:
-        bam = "results/{sample}/bwa_mtdna/{sample}.dedup.bam"
-    output:
-        bai = "results/{sample}/bwa_mtdna/{sample}.dedup.bam.bai"
-    conda:
-        "workflow/envs/samtools.yaml"
-    shell:
-        "samtools index {input.bam}"
-
-rule qualimap_bamqc_bwa_mtdna:
-    input:
-        bam = "results/{sample}/bwa_mtdna/{sample}.dedup.bam"
-    output:
-        txt = "results/{sample}/qualimap_mtdna/genome_results.txt"
-    log:
-        "logs/qualimap_mtdna/{sample}.log"
-    conda:
-        "workflow/envs/qualimap.yaml"
-    shell:
-        """
-        mkdir -p results/{wildcards.sample}/qualimap_mtdna
-        qualimap --java-mem-size=9G \
-                 bamqc \
-                 -bam {input.bam} \
-                 -outdir results/{wildcards.sample}/qualimap_mtdna \
-                 > {log} 2>&1
-        """
-
-
-rule damage_profiler_mtdna:
-    input:
-        bam = "results/{sample}/bwa_mtdna/{sample}.dedup.bam",
-        species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt",
-        config = "config/config.yaml"  # Correct path here
-    output:
-        dir = directory("results/{sample}/damageprofiler_mtdna/")
-    log:
-        "logs/damageprofiler_mtdna/{sample}.log"
-    conda:
-        "workflow/envs/damageprofiler.yaml"
-    shell:
-        """
-        mkdir -p {output.dir}
-
-        species=$(cat {input.species_file})
-
-        ref=$(python -c "import yaml; cfg = yaml.safe_load(open('{input.config}')); print(cfg['mtDNA_indices'].get('${{species}}', ''))")
-        if [ -z "$ref" ]; then
-            echo "Reference for species '$species' not found in {input.config}" >&2
-            exit 1
-        fi
-
-        damageprofiler -Xmx12G \
-            -i {input.bam} \
-            -o {output.dir} \
-            -r "$ref" > {log} 2>&1
-        """
-
-
-
-rule softclip_cram_mtdna:
-    input:
-        cram = "results/{sample}/bwa_mtdna/{sample}.dedup.cram",
-        ref = lambda wc: config["mtDNA_indices"][
-            open(f"results/{wc.sample}/fastq_screen/{wc.sample}_best_species.txt").read().strip()
-        ]
-    output:
-        cram = "results/{sample}/bwa_mtdna/{sample}.dedup_q30_softclipped.cram"
-    threads: 4
-    conda: "workflow/envs/samtools.yaml"
-    shell:
-        """
-        samtools view -h {input.cram} | \
-        python2 /home/kdaly/programs/scripts_for_goat_project/softclip_mod.py - 4 | \
-        samtools view -@ {threads} -T {input.ref} -O CRAM -o {output.cram}
-        """
-
-###----------------------------------------wrappers------------------------------------------------######################
-rule merge_pathogen_summaries:
-    input:
-        summaries=expand("results/{sample}/summary/{sample}_pathogen_summary.csv", sample=SAMPLES)
-    output:
-        excel="results/final/pathogen_summary_all_samples.xlsx"
-    conda:
-        "workflow/envs/summary.yaml"
-    script:
-        "scripts/merge_summaries.py"
-def refs_for_sample(sample):
-    return [ref.replace(" ", "_") for s, ref in SAMPLE_REF_PAIRS if s == sample]
-
-def summarize_inputs(wc):
-    refs = refs_for_sample(wc.sample)
-    # Instead of specific files inside these directories, just input the directories:
-    damage_dirs = [f"results/{wc.sample}/bwa_pathogen/damageprofiler_{ref}" for ref in refs]
-    qualimap_dirs = [f"results/{wc.sample}/bwa_pathogen/qualimap_{ref}" for ref in refs]
-
-    return [
-        f"results/{wc.sample}/Escore/pathogen/{wc.sample}_pathogen.csv",
-        "results/hops/maltExtract/heatmap_overview_Wevid.tsv",
-        "config/Pathogen_spreadsheet.csv",
-    ] + damage_dirs + qualimap_dirs
-
-def safe_name(pathogen):
-    return pathogen.replace(" ", "_").replace("/", "_") 
-
-rule summarize_pathogen_data:
-    input:
-        escore = "results/{sample}/Escore/pathogen/{sample}_pathogen.csv",
-        hops = "results/hops/maltExtract/heatmap_overview_Wevid.tsv",
-        spreadsheet = "config/Pathogen_spreadsheet.csv",
-        qualimaps = lambda wildcards: [
-            f"results/{wildcards.sample}/bwa_pathogen/qualimap_{safe_name(p)}"
-            for s, p in SAMPLE_REF_PAIRS if s == wildcards.sample
-        ],
-        damage = lambda wildcards: [
-            f"results/{wildcards.sample}/bwa_pathogen/damageprofiler_{safe_name(p)}"
-            for s, p in SAMPLE_REF_PAIRS if s == wildcards.sample
-        ],
-    output:
-        "results/{sample}/summary/{sample}_pathogen_summary.csv"
-    conda:
-        "workflow/envs/summary.yaml"
-    shell:
-        """
-        python scripts/summarize_pathogen_data.py \
-            --sample {wildcards.sample} \
-            --escore {input.escore} \
-            --hops {input.hops} \
-            --spreadsheet {input.spreadsheet} \
-            --bam_dir results/{wildcards.sample}/bwa_pathogen \
-            --qualimap_dir results/{wildcards.sample}/bwa_pathogen \
-            --damage_dir results/{wildcards.sample}/bwa_pathogen \
-            --output {output}
-        """
-
-
-rule summarize_host_mtdna:
-    input:
-        host_bams = expand("results/{sample}/bwa_host/{sample}.dedup.bam", sample=SAMPLES),
-        mtdna_bams = expand("results/{sample}/bwa_mtdna/{sample}.dedup.bam", sample=SAMPLES),
-        qualimap_host = expand("results/{sample}/qualimap/genome_results.txt", sample=SAMPLES),
-        qualimap_mtdna = expand("results/{sample}/qualimap_mtdna/genome_results.txt", sample=SAMPLES),
-        samples_tsv = "config/samples.tsv",
-        species = expand("results/{sample}/fastq_screen/{sample}_best_species.txt", sample=SAMPLES),
-        collapsed = expand("results/{sample}/adapter_removal/{sample}.collapsed.gz", sample=SAMPLES)
-    output:
-        "results/final/host_mtdna_summary_all_samples.xlsx"
-    params:
-        samples = ",".join(SAMPLES)
-    conda:
-        "workflow/envs/summary.yaml"
-    script:
-        "scripts/summarize_host_mtdna.py"
-
-
-
-rule pathogen_report:
-    input:
-        escore="results/{sample}/Escore/pathogen/{sample}_pathogen.csv",
-        spreadsheet="config/Pathogen_spreadsheet.csv",
-        summary="results/{sample}/summary/{sample}_pathogen_summary.csv"
-    output:
-        pdf="results/{sample}/summary/{sample}_{ref_name_safe}_pathogen_report_merged.pdf"
-    params:
-        pathogen=lambda wc: wc.ref_name_safe.replace("_", " ")
-    conda:
-        "workflow/envs/report_env.yaml"
-    shell:
-        """
-        Rscript scripts/generate_pathogen_report.R {wildcards.sample} '{params.pathogen}' {input.spreadsheet} {output.pdf}
-        """
+if __name__ == "__main__":
+    main()
