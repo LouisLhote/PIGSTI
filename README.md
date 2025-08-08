@@ -29,16 +29,16 @@ wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 bash Miniconda3-latest-Linux-x86_64.sh
 
 # Follow prompts, then reload shell
-source ~/.bashrc
+source ~/.bashrc```
 
 ### 2️⃣ Download PIGSTI and install Snakemake
 
 # Clone the repository
-git clone https://github.com/LouisLhote/PIGSTI.git
-cd PIGSTI
+```git clone https://github.com/LouisLhote/PIGSTI.git
+cd PIGSTI```
 
 # Create the conda environment from the provided YAML
-conda env create -n pigsti-snake -f PIGSTI_snakemake.yaml
+```conda env create -n pigsti-snake -f PIGSTI_snakemake.yaml```
 
 # Activate the environment
-conda activate pigsti-snake
+```conda activate pigsti-snake```
