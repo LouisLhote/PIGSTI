@@ -486,13 +486,13 @@ rule MappingStats:
 
 rule EntropyProfile:
     input:
-        bam = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam",
-        bai = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam.bai"
+        bam = "results/{sample}/bwa_pathogen/{sample}_{pathogen}.dedup.bam",
+        bai = "results/{sample}/bwa_pathogen/{sample}_{pathogen}.dedup.bam.bai"
     output:
-        plot = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.entropy_plot.png",
-        mean = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.mean_entropy.txt"
+        plot = "results/{sample}/bwa_pathogen/{sample}_{pathogen}.entropy_plot.png",
+        mean = "results/{sample}/bwa_pathogen/{sample}_{pathogen}.mean_entropy.txt"
     conda:
-        "workflow/envs/pysam.yaml"
+        "workflow/envs/qc.yaml"
     script:
         "scripts/calculate_entropy_profile.py"
 
