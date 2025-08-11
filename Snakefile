@@ -389,13 +389,16 @@ rule mark_duplicates:
             VALIDATION_STRINGENCY=SILENT
         """
 
-rule index_dedup_bam:
+rule index_bam:
     input:
-        bam = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam"
+        "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam"
     output:
-        bai = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam.bai"
-    conda: "workflow/envs/samtools.yaml"
-    shell: "samtools index {input.bam}"
+        "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam.bai"
+    conda:
+        "workflow/envs/samtools.yaml"
+    shell:
+        "samtools index {input}"
+
 
 rule qualimap_bamqc_bwa:
     input:
@@ -483,14 +486,16 @@ rule MappingStats:
 
 rule EntropyProfile:
     input:
-        bam="results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam"
+        bam = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam",
+        bai = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam.bai"
     output:
-        plot="results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.entropy_plot.png",
-        summary="results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.mean_entropy.txt"
+        plot = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.entropy_plot.png",
+        mean = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.mean_entropy.txt"
     conda:
-        "workflow/envs/qc.yaml"
+        "workflow/envs/pysam.yaml"
     script:
         "scripts/calculate_entropy_profile.py"
+
 
 
 ##plus---------------
