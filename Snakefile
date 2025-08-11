@@ -48,18 +48,19 @@ spreadsheet_df.columns = spreadsheet_df.columns.str.strip()
 def get_sample_ref_pairs():
     """Dynamically generate SAMPLE_REF_PAIRS based on available escore files"""
     pairs = []
-for sample in SAMPLES:
-    escore_path = f"results/{sample}/Escore/pathogen/{sample}_pathogen.csv"
-    if not os.path.exists(escore_path):
-        continue
-    escore_df = pd.read_csv(escore_path)
-    escore_df["taxonomy"] = escore_df["taxonomy"].str.strip()
-    
-    # Only add pathogens from escore that are in master spreadsheet
-    for pathogen in escore_df["taxonomy"]:
-        if pathogen in spreadsheet_df["Krakenuniq name"].values:
+    for sample in SAMPLES:
+        escore_path = f"results/{sample}/Escore/pathogen/{sample}_pathogen.csv"
+        if not os.path.exists(escore_path):
+            continue
+        escore_df = pd.read_csv(escore_path)
+        escore_df["taxonomy"] = escore_df["taxonomy"].str.strip()
+
+        # Only add pathogens from escore that are in master spreadsheet
+        for pathogen in escore_df["taxonomy"]:
+            if pathogen in spreadsheet_df["Krakenuniq name"].values:
                 pairs.append((sample, pathogen))
     return pairs
+
 
 
 
@@ -70,6 +71,7 @@ def get_all_possible_pathogens():
         for pathogen in spreadsheet_df["Krakenuniq name"].values:
             pairs.append((sample, pathogen))
     return pairs
+
 
 
 
