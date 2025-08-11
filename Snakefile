@@ -243,71 +243,36 @@ checkpoint generate_pathogen_targets:
             for target in targets:
                 f.write(target + "\n")
 
-# Add a specific target for pathogen BWA steps and downstream analysis
+def expand_downstream_targets():
+    targets = []
+    with open("results/pathogen_targets.txt") as f:
+        for bam in f:
+            bam = bam.strip()
+            if not bam:
+                continue
+            sample, pathogen_file = Path(bam).stem.split("_", 1)
+            pathogen = pathogen_file.replace(".dedup", "")
+            targets.extend([
+                bam,
+                f"results/{sample}/bwa_pathogen/qualimap_{pathogen}",
+                f"results/{sample}/bwa_pathogen/damageprofiler_{pathogen}",
+                f"results/{sample}/bwa_pathogen/adnaplotter_{pathogen}.pdf",
+                f"results/{sample}/bwa_pathogen/{sample}_{pathogen}.ani.txt",
+                f"results/{sample}/bwa_pathogen/{sample}_{pathogen}.depth.txt",
+                f"results/{sample}/bwa_pathogen/{sample}_{pathogen}.breadth.txt",
+                f"results/{sample}/bwa_pathogen/{sample}_{pathogen}.expected_breadth.txt",
+                f"results/{sample}/bwa_pathogen/{sample}_{pathogen}.breadth_ratio.txt",
+                f"results/{sample}/bwa_pathogen/{sample}_{pathogen}.entropy_plot.png",
+                f"results/{sample}/bwa_pathogen/{sample}_{pathogen}.mean_entropy.txt"
+            ])
+    return targets
 rule pathogen_bwa_targets:
     input:
-        # BWA alignment outputs
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Sheeppox_virus.dedup.bam",
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Lumpy_skin_disease_virus.dedup.bam",
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Goatpox_virus.dedup.bam",
-        "results/LL066/bwa_pathogen/LL066_Clostridium_septicum.dedup.bam",
-        
-        # Qualimap outputs
-        "results/MYRZ180/bwa_pathogen/qualimap_Sheeppox_virus",
-        "results/MYRZ180/bwa_pathogen/qualimap_Lumpy_skin_disease_virus",
-        "results/MYRZ180/bwa_pathogen/qualimap_Goatpox_virus",
-        "results/LL066/bwa_pathogen/qualimap_Clostridium_septicum",
-        
-        # Damageprofiler outputs
-        "results/MYRZ180/bwa_pathogen/damageprofiler_Sheeppox_virus",
-        "results/MYRZ180/bwa_pathogen/damageprofiler_Lumpy_skin_disease_virus",
-        "results/MYRZ180/bwa_pathogen/damageprofiler_Goatpox_virus",
-        "results/LL066/bwa_pathogen/damageprofiler_Clostridium_septicum",
-        
-        # aDNA BAMPlotter outputs
-        "results/MYRZ180/bwa_pathogen/adnaplotter_Sheeppox_virus.pdf",
-        "results/MYRZ180/bwa_pathogen/adnaplotter_Lumpy_skin_disease_virus.pdf",
-        "results/MYRZ180/bwa_pathogen/adnaplotter_Goatpox_virus.pdf",
-        "results/LL066/bwa_pathogen/adnaplotter_Clostridium_septicum.pdf",
-        
-        # ANI calculation outputs
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Sheeppox_virus.ani.txt",
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Lumpy_skin_disease_virus.ani.txt",
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Goatpox_virus.ani.txt",
-        "results/LL066/bwa_pathogen/LL066_Clostridium_septicum.ani.txt",
-        
-        # Mapping stats outputs
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Sheeppox_virus.depth.txt",
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Sheeppox_virus.breadth.txt",
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Sheeppox_virus.expected_breadth.txt",
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Sheeppox_virus.breadth_ratio.txt",
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Lumpy_skin_disease_virus.depth.txt",
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Lumpy_skin_disease_virus.breadth.txt",
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Lumpy_skin_disease_virus.expected_breadth.txt",
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Lumpy_skin_disease_virus.breadth_ratio.txt",
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Goatpox_virus.depth.txt",
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Goatpox_virus.breadth.txt",
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Goatpox_virus.expected_breadth.txt",
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Goatpox_virus.breadth_ratio.txt",
-        "results/LL066/bwa_pathogen/LL066_Clostridium_septicum.depth.txt",
-        "results/LL066/bwa_pathogen/LL066_Clostridium_septicum.breadth.txt",
-        "results/LL066/bwa_pathogen/LL066_Clostridium_septicum.expected_breadth.txt",
-        "results/LL066/bwa_pathogen/LL066_Clostridium_septicum.breadth_ratio.txt",
-        
-        # Entropy outputs
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Sheeppox_virus.entropy_plot.png",
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Sheeppox_virus.mean_entropy.txt",
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Lumpy_skin_disease_virus.entropy_plot.png",
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Lumpy_skin_disease_virus.mean_entropy.txt",
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Goatpox_virus.entropy_plot.png",
-        "results/MYRZ180/bwa_pathogen/MYRZ180_Goatpox_virus.mean_entropy.txt",
-        "results/LL066/bwa_pathogen/LL066_Clostridium_septicum.entropy_plot.png",
-        "results/LL066/bwa_pathogen/LL066_Clostridium_septicum.mean_entropy.txt"
+        expand_downstream_targets
     output:
         touch("results/pathogen_bwa_complete.txt")
     shell:
         "echo 'Pathogen BWA alignment and downstream analysis completed for all samples' > {output}"
-
 
 
 #--------------------list and configs files -------------------------------------------
