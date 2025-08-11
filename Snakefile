@@ -221,29 +221,7 @@ rule all:
         "results/pathogen_detection/detection_scores_heatmap.pdf",
         "results/pathogen_detection/detection_scores_matrix.csv"
 
-# Generate pathogen targets after escore completes
-checkpoint generate_pathogen_targets:
-    input:
-        escore_files = expand("results/{sample}/Escore/pathogen/{sample}_pathogen.csv", sample=SAMPLES)
-    output:
-        targets_file = "results/pathogen_targets.txt"
-    run:
-        targets = []
-        for sample in SAMPLES:
-            escore_path = f"results/{sample}/Escore/pathogen/{sample}_pathogen.csv"
-            if os.path.exists(escore_path):
-                escore_df = pd.read_csv(escore_path)
-                escore_df["taxonomy"] = escore_df["taxonomy"].str.strip()
-                
-                # Only add pathogens from escore that are in master spreadsheet
-                for pathogen in escore_df["taxonomy"]:
-                    if pathogen in spreadsheet_df["Krakenuniq name"].values:
-                        pathogen_safe = safe_name(pathogen)
-                        targets.append(f"results/{sample}/bwa_pathogen/{sample}_{pathogen_safe}.dedup.bam")
-        
-        with open(output.targets_file, "w") as f:
-            for target in targets:
-                f.write(target + "\n")
+
 
 def expand_downstream_targets(wildcards):
     # Get checkpoint output path
