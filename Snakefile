@@ -245,7 +245,7 @@ checkpoint generate_pathogen_targets:
             for target in targets:
                 f.write(target + "\n")
 
-def expand_downstream_targets():
+def expand_downstream_targets(wildcards):
     targets = []
     with open("results/pathogen_targets.txt") as f:
         for bam in f:
@@ -268,6 +268,7 @@ def expand_downstream_targets():
                 f"results/{sample}/bwa_pathogen/{sample}_{pathogen}.mean_entropy.txt"
             ])
     return targets
+
 rule pathogen_bwa_targets:
     input:
         expand_downstream_targets
