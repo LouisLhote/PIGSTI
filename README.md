@@ -11,8 +11,6 @@
   - Species-specific endogenous DNA  
   - Human contamination  
   - Mitochondrial genome coverage  
-- **Modular workflow** – Structured via Snakemake for reproducibility, scalability, and easy maintenance.
-
 ---
 
 ## 🔧 Installation
