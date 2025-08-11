@@ -246,8 +246,10 @@ checkpoint generate_pathogen_targets:
                 f.write(target + "\n")
 
 def expand_downstream_targets(wildcards):
+    # Get checkpoint output path
+    ckpt_output = checkpoints.generate_pathogen_targets.get(**wildcards).output.targets_file
     targets = []
-    with open("results/pathogen_targets.txt") as f:
+    with open(ckpt_output) as f:
         for bam in f:
             bam = bam.strip()
             if not bam:
@@ -269,6 +271,26 @@ def expand_downstream_targets(wildcards):
             ])
     return targets
 
+checkpoint generate_pathogen_targets:
+    input:
+        escore_files = expand("results/{sample}/Escore/pathogen/{sample}_pathogen.csv", sample=SAMPLES)
+    output:
+        targets_file = "results/pathogen_targets.txt"
+    run:
+        targets = []
+        for sample in SAMPLES:
+            escore_path = f"results/{sample}/Escore/pathogen/{sample}_pathogen.csv"
+            if os.path.exists(escore_path):
+                escore_df = pd.read_csv(escore_path)
+                escore_df["taxonomy"] = escore_df["taxonomy"].str.strip()
+                for pathogen in escore_df["taxonomy"]:
+                    if pathogen in spreadsheet_df["Krakenuniq name"].values:
+                        pathogen_safe = safe_name(pathogen)
+                        targets.append(f"results/{sample}/bwa_pathogen/{sample}_{pathogen_safe}.dedup.bam")
+        with open(output.targets_file, "w") as f:
+            for target in targets:
+                f.write(target + "\n")
+
 rule pathogen_bwa_targets:
     input:
         expand_downstream_targets
@@ -276,7 +298,6 @@ rule pathogen_bwa_targets:
         touch("results/pathogen_bwa_complete.txt")
     shell:
         "echo 'Pathogen BWA alignment and downstream analysis completed for all samples' > {output}"
-
 
 #--------------------list and configs files -------------------------------------------
 
