@@ -2,11 +2,32 @@ import pysam
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+import os
+import sys
 
-bam = snakemake.input.bam
-plot = snakemake.output.plot
-summary = snakemake.output.summary
+# --- Handle both named and positional Snakemake outputs ---
+try:
+    bam = snakemake.input.bam
+except AttributeError:
+    bam = snakemake.input[0]
 
+try:
+    plot = snakemake.output.plot
+except AttributeError:
+    plot = snakemake.output[0]
+
+try:
+    summary = snakemake.output.summary
+except AttributeError:
+    summary = snakemake.output[1]
+
+# --- Optional: Check BAM index exists ---
+bam_index = bam + ".bai"
+if not os.path.exists(bam_index):
+    sys.stderr.write(f"ERROR: Missing BAM index file: {bam_index}\n")
+    sys.exit(1)
+
+# --- Parameters ---
 window_size = 1000
 step_size = 100
 
