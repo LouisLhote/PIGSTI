@@ -887,7 +887,7 @@ rule damage_profiler_host:
 
 rule softclip_bam_host:
     input:
-        config = "config/config.yaml"
+        config = "config/config.yaml",
         bam = "results/{sample}/bwa_host/{sample}.dedup.bam",
         species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt"
     output:
@@ -897,7 +897,6 @@ rule softclip_bam_host:
     shell:
         """
         species=$(cat {input.species_file})
-
         ref=$(python -c "import yaml; cfg = yaml.safe_load(open('{input.config}')); print(cfg['mtDNA_indices'].get('${{species}}', ''))")
         samtools view -h {input.bam} | \
         python2 scripts/softclip_mod.py - 4 | \
@@ -905,8 +904,8 @@ rule softclip_bam_host:
         """
 rule qualimap_bamqc_bwa_host:
     input:
-        config = "config/config.yaml"
-        species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt"
+        config = "config/config.yaml",
+        species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt",
         bam = "results/{sample}/bwa_host/{sample}.dedup_q30_softclipped.cram",
     output:
         txt = "results/{sample}/qualimap/genome_results.txt"
