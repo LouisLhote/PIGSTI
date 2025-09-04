@@ -900,7 +900,7 @@ rule softclip_bam_host:
         ref=$(python -c "import yaml; cfg = yaml.safe_load(open('{input.config}')); print(cfg['mtDNA_indices'].get('${{species}}', ''))")
         samtools view -h {input.bam} | \
         python2 scripts/softclip_mod.py - 4 | \
-        samtools view -@ {threads} -T {input.ref} -O CRAM -o {output.cram}
+        samtools view -@ {threads} -T "$ref" -O CRAM -o {output.cram}
         """
 rule qualimap_bamqc_bwa_host:
     input:
@@ -919,7 +919,7 @@ rule qualimap_bamqc_bwa_host:
 
         ref=$(python -c "import yaml; cfg = yaml.safe_load(open('{input.config}')); print(cfg['mtDNA_indices'].get('${{species}}', ''))")
         mkdir -p results/{wildcards.sample}/qualimap
-        samtools view -hb -T {input.ref} {input.bam}|
+        samtools view -hb -T "$ref" {input.bam}|
         qualimap \
             --java-mem-size=9G \
             bamqc \
@@ -1059,7 +1059,7 @@ rule softclip_bam_mtdna:
         ref=$(python -c "import yaml; cfg = yaml.safe_load(open('{input.config}')); print(cfg['mtDNA_indices'].get('${{species}}', ''))")
         samtools view -h {input.bam} | \
         python2 scripts/softclip_mod.py - 4 | \
-        samtools view -@ {threads} -T {input.ref} -O CRAM -o {output.cram}
+        samtools view -@ {threads} -T "$ref" -O CRAM -o {output.cram}
         """
 rule qualimap_bamqc_bwa_mtdna:
     input:
@@ -1077,7 +1077,7 @@ rule qualimap_bamqc_bwa_mtdna:
         species=$(cat {input.species_file})
         ref=$(python -c "import yaml; cfg = yaml.safe_load(open('{input.config}')); print(cfg['mtDNA_indices'].get('${{species}}', ''))")
         mkdir -p results/{wildcards.sample}/qualimap
-        samtools view -hb -T {input.ref} {input.bam}|
+        samtools view -hb -T "$ref" {input.bam}|
         qualimap \
             --java-mem-size=9G \
             bamqc \
