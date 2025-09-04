@@ -164,6 +164,7 @@ rule all:
         expand("results/{sample}/bwa_host/{sample}_F4_q30.bam", sample=SAMPLES),
         expand("results/{sample}/bwa_host/{sample}_F4_q30.sorted.bam", sample=SAMPLES),
         expand("results/{sample}/bwa_host/{sample}.dedup.bam", sample=SAMPLES),
+        expand("results/{sample}/bwa_host/{sample}.dedup_q30_softclipped.cram", sample=SAMPLES),
         expand("results/{sample}/bwa_host/{sample}.dedup.metrics.txt", sample=SAMPLES),
         expand("results/{sample}/bwa_host/{sample}_F4_q30.bam.bai", sample=SAMPLES),
         expand("results/{sample}/bwa_host/{sample}.dedup.bam.bai", sample=SAMPLES),
@@ -180,6 +181,7 @@ rule all:
         expand("results/{sample}/bwa_mtdna/{sample}.dedup.metrics.txt", sample=SAMPLES),
         expand("results/{sample}/bwa_mtdna/{sample}_F4_q30.bam.bai", sample=SAMPLES),
         expand("results/{sample}/bwa_mtdna/{sample}.dedup.bam.bai", sample=SAMPLES),
+        expand("results/{sample}/bwa_mtdna/{sample}.dedup_q30_softclipped.cram", sample=SAMPLES),
 
         # mtDNA QC and damage
         expand("results/{sample}/damageprofiler_mtdna", sample=SAMPLES),
@@ -854,25 +856,6 @@ rule index_dedup_bam_host:
         "samtools index {input.bam}"
 
 
-rule qualimap_bamqc_bwa_host:
-    input:
-        bam = "results/{sample}/bwa_host/{sample}.dedup.bam"
-    output:
-        txt = "results/{sample}/qualimap/genome_results.txt"
-    log:
-        "logs/qualimap/{sample}.log"
-    conda:
-        "workflow/envs/qualimap.yaml"
-    shell:
-        """
-        mkdir -p results/{wildcards.sample}/qualimap
-        qualimap --java-mem-size=9G \
-                 bamqc \
-                 -bam {input.bam} \
-                 -outdir results/{wildcards.sample}/qualimap \
-                 > {log} 2>&1
-        """
-
 rule damage_profiler_host:
     input:
         bam = "results/{sample}/bwa_host/{sample}.dedup.bam",
@@ -902,7 +885,7 @@ rule damage_profiler_host:
             -r "$ref" > {log} 2>&1
         """
 
-rule softclip_cram_host:
+rule softclip_bam_host:
     input:
         bam = "results/{sample}/bwa_host/{sample}.dedup.bam",
         ref = lambda wc: config["bwa_indices"][
@@ -911,14 +894,37 @@ rule softclip_cram_host:
     output:
         cram = "results/{sample}/bwa_host/{sample}.dedup_q30_softclipped.cram"
     threads: 4
-    conda: "workflow/envs/samtools.yaml"  # Or a custom env with Python2 + samtools if needed
+    conda: "workflow/envs/samtools.yaml"  
     shell:
         """
         samtools view -h {input.bam} | \
-        python2 /home/kdaly/programs/scripts_for_goat_project/softclip_mod.py - 4 | \
+        python2 scripts/softclip_mod.py - 4 | \
         samtools view -@ {threads} -T {input.ref} -O CRAM -o {output.cram}
         """
-
+rule qualimap_bamqc_bwa_host:
+    input:
+        bam = "results/{sample}/bwa_host/{sample}.dedup_q30_softclipped.cram",
+        ref = lambda wc: config["bwa_indices"][
+            open(f"results/{wc.sample}/fastq_screen/{wc.sample}_best_species.txt").read().strip()
+        ]
+    output:
+        txt = "results/{sample}/qualimap/genome_results.txt"
+    log:
+        "logs/qualimap/{sample}.log"
+    conda:
+        "workflow/envs/qualimap.yaml"
+    shell:
+        """
+        
+        mkdir -p results/{wildcards.sample}/qualimap
+        samtools view -hb -T {input.ref} {input.bam}|
+        qualimap \
+            --java-mem-size=9G \
+            bamqc \
+            -bam /dev/stdin \
+            -outdir -outdir results/{wildcards.sample}/qualimap_host
+                 > {log} 2>&1
+        """
 
 ####-----------------------------------------------------########mtDNA mapping#####----------------------------------------------------------------------------
 rule bwa_aln_mtdna:
@@ -1008,26 +1014,6 @@ rule index_dedup_bam_mtdna:
     shell:
         "samtools index {input.bam}"
 
-rule qualimap_bamqc_bwa_mtdna:
-    input:
-        bam = "results/{sample}/bwa_mtdna/{sample}.dedup.bam"
-    output:
-        txt = "results/{sample}/qualimap_mtdna/genome_results.txt"
-    log:
-        "logs/qualimap_mtdna/{sample}.log"
-    conda:
-        "workflow/envs/qualimap.yaml"
-    shell:
-        """
-        mkdir -p results/{wildcards.sample}/qualimap_mtdna
-        qualimap --java-mem-size=9G \
-                 bamqc \
-                 -bam {input.bam} \
-                 -outdir results/{wildcards.sample}/qualimap_mtdna \
-                 > {log} 2>&1
-        """
-
-
 rule damage_profiler_mtdna:
     input:
         bam = "results/{sample}/bwa_mtdna/{sample}.dedup.bam",
@@ -1056,12 +1042,9 @@ rule damage_profiler_mtdna:
             -o {output.dir} \
             -r "$ref" > {log} 2>&1
         """
-
-
-
-rule softclip_cram_mtdna:
+rule softclip_bam_mtdna:
     input:
-        cram = "results/{sample}/bwa_mtdna/{sample}.dedup.cram",
+        bam = "results/{sample}/bwa_mtdna/{sample}.dedup.bam",
         ref = lambda wc: config["mtDNA_indices"][
             open(f"results/{wc.sample}/fastq_screen/{wc.sample}_best_species.txt").read().strip()
         ]
@@ -1071,9 +1054,33 @@ rule softclip_cram_mtdna:
     conda: "workflow/envs/samtools.yaml"
     shell:
         """
-        samtools view -h {input.cram} | \
-        python2 /home/kdaly/programs/scripts_for_goat_project/softclip_mod.py - 4 | \
+        samtools view -h {input.bam} | \
+        python2 scripts/softclip_mod.py - 4 | \
         samtools view -@ {threads} -T {input.ref} -O CRAM -o {output.cram}
+        """
+rule qualimap_bamqc_bwa_mtdna:
+    input:
+        ref = lambda wc: config["mtDNA_indices"][
+            open(f"results/{wc.sample}/fastq_screen/{wc.sample}_best_species.txt").read().strip()
+        ]
+        bam = "results/{sample}/bwa_mtdna/{sample}.dedup_q30_softclipped.cram"
+    output:
+        txt = "results/{sample}/qualimap_mtdna/genome_results.txt"
+    log:
+        "logs/qualimap_mtdna/{sample}.log"
+    conda:
+        "workflow/envs/qualimap.yaml"
+    shell:
+        """
+        
+        mkdir -p results/{wildcards.sample}/qualimap
+        samtools view -hb -T {input.ref} {input.bam}|
+        qualimap \
+            --java-mem-size=9G \
+            bamqc \
+            -bam /dev/stdin \
+            -outdir -outdir results/{wildcards.sample}/qualimap_mtdna/
+                 > {log} 2>&1
         """
 
 ###----------------------------------------wrappers------------------------------------------------######################
