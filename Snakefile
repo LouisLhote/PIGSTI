@@ -893,7 +893,7 @@ rule softclip_bam_host:
     output:
         cram = "results/{sample}/bwa_host/{sample}.dedup_q30_softclipped.cram"
     threads: 4
-    conda: "workflow/envs/samtools.yaml"  
+    conda: "workflow/envs/soft_clip.yaml"  
     shell:
         """
         species=$(cat {input.species_file})
@@ -1052,7 +1052,7 @@ rule softclip_bam_mtdna:
     output:
         cram = "results/{sample}/bwa_mtdna/{sample}.dedup_q30_softclipped.cram"
     threads: 4
-    conda: "workflow/envs/samtools.yaml"
+    conda: "workflow/envs/soft_clip.yaml"
     shell:
         """
         species=$(cat {input.species_file})
