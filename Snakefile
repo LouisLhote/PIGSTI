@@ -1056,7 +1056,7 @@ rule softclip_bam_mtdna:
     shell:
         """
         species=$(cat {input.species_file})
-        ref=$(python -c "import yaml; cfg = yaml.safe_load(open('{input.config}')); print(cfg['mtDNA_indices'].get('${{species}}', ''))")
+        ref=$(python3 -c "import yaml; cfg = yaml.safe_load(open('{input.config}')); print(cfg['mtDNA_indices'].get('${{species}}', ''))")
         samtools view -h {input.bam} | \
         python2 scripts/softclip_mod.py - 4 | \
         samtools view -@ {threads} -T "$ref" -O CRAM -o {output.cram}
