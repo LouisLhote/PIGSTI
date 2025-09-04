@@ -1046,25 +1046,25 @@ rule damage_profiler_mtdna:
         """
 rule softclip_bam_mtdna:
     input:
+        config = "config/config.yaml",
+        species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt",
         bam = "results/{sample}/bwa_mtdna/{sample}.dedup.bam",
-        ref = lambda wc: config["mtDNA_indices"][
-            open(f"results/{wc.sample}/fastq_screen/{wc.sample}_best_species.txt").read().strip()
-        ]
     output:
         cram = "results/{sample}/bwa_mtdna/{sample}.dedup_q30_softclipped.cram"
     threads: 4
     conda: "workflow/envs/samtools.yaml"
     shell:
         """
+        species=$(cat {input.species_file})
+        ref=$(python -c "import yaml; cfg = yaml.safe_load(open('{input.config}')); print(cfg['mtDNA_indices'].get('${{species}}', ''))")
         samtools view -h {input.bam} | \
         python2 scripts/softclip_mod.py - 4 | \
         samtools view -@ {threads} -T {input.ref} -O CRAM -o {output.cram}
         """
 rule qualimap_bamqc_bwa_mtdna:
     input:
-        ref = lambda wc: config["mtDNA_indices"][
-            open(f"results/{wc.sample}/fastq_screen/{wc.sample}_best_species.txt").read().strip()
-        ],
+        config = "config/config.yaml",
+        species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt",
         bam = "results/{sample}/bwa_mtdna/{sample}.dedup_q30_softclipped.cram"
     output:
         txt = "results/{sample}/qualimap_mtdna/genome_results.txt"
@@ -1074,7 +1074,8 @@ rule qualimap_bamqc_bwa_mtdna:
         "workflow/envs/qualimap.yaml"
     shell:
         """
-        
+        species=$(cat {input.species_file})
+        ref=$(python -c "import yaml; cfg = yaml.safe_load(open('{input.config}')); print(cfg['mtDNA_indices'].get('${{species}}', ''))")
         mkdir -p results/{wildcards.sample}/qualimap
         samtools view -hb -T {input.ref} {input.bam}|
         qualimap \
