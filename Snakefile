@@ -1062,7 +1062,7 @@ rule qualimap_bamqc_bwa_mtdna:
     input:
         ref = lambda wc: config["mtDNA_indices"][
             open(f"results/{wc.sample}/fastq_screen/{wc.sample}_best_species.txt").read().strip()
-        ]
+        ],
         bam = "results/{sample}/bwa_mtdna/{sample}.dedup_q30_softclipped.cram"
     output:
         txt = "results/{sample}/qualimap_mtdna/genome_results.txt"
