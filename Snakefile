@@ -917,20 +917,20 @@ rule qualimap_bamqc_bwa_host:
         bam = "results/{sample}/bwa_host/{sample}.dedup_q30_softclipped.cram",
         ref = get_host_ref
     output:
-        txt = "results/{sample}/qualimap_host/genome_results.txt"
+        txt = "results/{sample}/qualimap/genome_results.txt"
     log:
         "logs/qualimap/{sample}.log"
     conda:
         "workflow/envs/qualimap.yaml"  # needs qualimap + samtools + java
     shell:
         """
-        mkdir -p results/{wildcards.sample}/qualimap_host
+        mkdir -p results/{wildcards.sample}/qualimap/
         samtools view -hb -T {input.ref} {input.bam} |
         qualimap \
             --java-mem-size=9G \
             bamqc \
             -bam /dev/stdin \
-            -outdir results/{wildcards.sample}/qualimap_host \
+            -outdir results/{wildcards.sample}/qualimap/ \
             > {log} 2>&1
         """
 
