@@ -885,47 +885,53 @@ rule damage_profiler_host:
             -r "$ref" > {log} 2>&1
         """
 
+import yaml
+
+# Load config once globally
+with open("config/config.yaml") as f:
+    CFG = yaml.safe_load(f)
+
+def get_host_ref(wc):
+    """Look up host reference based on species file."""
+    species_file = f"results/{wc.sample}/fastq_screen/{wc.sample}_best_species.txt"
+    species = open(species_file).read().strip()
+    return CFG["bwa_indices"].get(species, "")
+
 rule softclip_bam_host:
     input:
-        config = "config/config.yaml",
         bam = "results/{sample}/bwa_host/{sample}.dedup.bam",
-        species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt"
+        ref = get_host_ref
     output:
         cram = "results/{sample}/bwa_host/{sample}.dedup_q30_softclipped.cram"
     threads: 4
-    conda: "workflow/envs/soft_clip.yaml"  
+    conda: "workflow/envs/soft_clip.yaml"  # only needs python=2.7 + samtools
     shell:
         """
-        species=$(cat {input.species_file})
-        ref=$(python3 -c "import yaml; cfg = yaml.safe_load(open('{input.config}')); print(cfg['mtDNA_indices'].get('${{species}}', ''))")
-        samtools view -h {input.bam} | \
-        python2 scripts/softclip_mod.py - 4 | \
-        samtools view -@ {threads} -T "$ref" -O CRAM -o {output.cram}
+        samtools view -h {input.bam} |
+        python2 scripts/softclip_mod.py - 4 |
+        samtools view -@ {threads} -T {input.ref} -O CRAM -o {output.cram}
         """
+
 rule qualimap_bamqc_bwa_host:
     input:
-        config = "config/config.yaml",
-        species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt",
         bam = "results/{sample}/bwa_host/{sample}.dedup_q30_softclipped.cram",
+        ref = get_host_ref
     output:
-        txt = "results/{sample}/qualimap/genome_results.txt"
+        txt = "results/{sample}/qualimap_host/genome_results.txt"
     log:
         "logs/qualimap/{sample}.log"
     conda:
-        "workflow/envs/qualimap.yaml"
+        "workflow/envs/qualimap.yaml"  # needs qualimap + samtools + java
     shell:
         """
-        species=$(cat {input.species_file})
-
-        ref=$(python -c "import yaml; cfg = yaml.safe_load(open('{input.config}')); print(cfg['mtDNA_indices'].get('${{species}}', ''))")
-        mkdir -p results/{wildcards.sample}/qualimap
-        samtools view -hb -T "$ref" {input.bam}|
+        mkdir -p results/{wildcards.sample}/qualimap_host
+        samtools view -hb -T {input.ref} {input.bam} |
         qualimap \
             --java-mem-size=9G \
             bamqc \
             -bam /dev/stdin \
-            -outdir -outdir results/{wildcards.sample}/qualimap_host
-                 > {log} 2>&1
+            -outdir results/{wildcards.sample}/qualimap_host \
+            > {log} 2>&1
         """
 
 ####-----------------------------------------------------########mtDNA mapping#####----------------------------------------------------------------------------
@@ -1044,47 +1050,55 @@ rule damage_profiler_mtdna:
             -o {output.dir} \
             -r "$ref" > {log} 2>&1
         """
+import yaml
+
+# Load config once globally
+with open("config/config.yaml") as f:
+    CFG = yaml.safe_load(f)
+
+def get_mtDNA_ref(wc):
+    """Look up mtDNA reference based on species file."""
+    species_file = f"results/{wc.sample}/fastq_screen/{wc.sample}_best_species.txt"
+    species = open(species_file).read().strip()
+    return CFG["mtDNA_indices"].get(species, "")
+
 rule softclip_bam_mtdna:
     input:
-        config = "config/config.yaml",
-        species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt",
         bam = "results/{sample}/bwa_mtdna/{sample}.dedup.bam",
+        ref = get_mtDNA_ref
     output:
         cram = "results/{sample}/bwa_mtdna/{sample}.dedup_q30_softclipped.cram"
     threads: 4
-    conda: "workflow/envs/soft_clip.yaml"
+    conda: "workflow/envs/soft_clip.yaml"  # only needs python=2.7 + samtools
     shell:
         """
-        species=$(cat {input.species_file})
-        ref=$(python3 -c "import yaml; cfg = yaml.safe_load(open('{input.config}')); print(cfg['mtDNA_indices'].get('${{species}}', ''))")
-        samtools view -h {input.bam} | \
-        python2 scripts/softclip_mod.py - 4 | \
-        samtools view -@ {threads} -T "$ref" -O CRAM -o {output.cram}
+        samtools view -h {input.bam} |
+        python2 scripts/softclip_mod.py - 4 |
+        samtools view -@ {threads} -T {input.ref} -O CRAM -o {output.cram}
         """
+
 rule qualimap_bamqc_bwa_mtdna:
     input:
-        config = "config/config.yaml",
-        species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt",
-        bam = "results/{sample}/bwa_mtdna/{sample}.dedup_q30_softclipped.cram"
+        bam = "results/{sample}/bwa_mtdna/{sample}.dedup_q30_softclipped.cram",
+        ref = get_mtDNA_ref
     output:
         txt = "results/{sample}/qualimap_mtdna/genome_results.txt"
     log:
         "logs/qualimap_mtdna/{sample}.log"
     conda:
-        "workflow/envs/qualimap.yaml"
+        "workflow/envs/qualimap.yaml"  # needs qualimap + samtools + java
     shell:
         """
-        species=$(cat {input.species_file})
-        ref=$(python -c "import yaml; cfg = yaml.safe_load(open('{input.config}')); print(cfg['mtDNA_indices'].get('${{species}}', ''))")
-        mkdir -p results/{wildcards.sample}/qualimap
-        samtools view -hb -T "$ref" {input.bam}|
+        mkdir -p results/{wildcards.sample}/qualimap_mtdna
+        samtools view -hb -T {input.ref} {input.bam} |
         qualimap \
             --java-mem-size=9G \
             bamqc \
             -bam /dev/stdin \
-            -outdir -outdir results/{wildcards.sample}/qualimap_mtdna/
-                 > {log} 2>&1
+            -outdir results/{wildcards.sample}/qualimap_mtdna/ \
+            > {log} 2>&1
         """
+
 
 ###----------------------------------------wrappers------------------------------------------------######################
 rule merge_pathogen_summaries:
