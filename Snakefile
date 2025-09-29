@@ -14,6 +14,11 @@ import re
 import csv
 from pathlib import Path
 import json
+import yaml
+
+# Load config once globally (needed by rules' params)
+with open("config/config.yaml") as f:
+    CFG = yaml.safe_load(f)
 
 
 # -------------------- Load sample info --------------------
@@ -860,6 +865,7 @@ rule index_dedup_bam_host:
 rule damage_profiler_host:
     input:
         bam = "results/{sample}/bwa_host/{sample}.dedup.bam",
+        bai = "results/{sample}/bwa_host/{sample}.dedup.bam.bai",
         species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt",
         config = "config/config.yaml"
     output:
@@ -868,23 +874,10 @@ rule damage_profiler_host:
         "logs/damageprofiler/{sample}.log"
     conda:
         "workflow/envs/damageprofiler.yaml"
-    shell:
-        """
-        mkdir -p {output.dir}
-
-        species=$(cat {input.species_file})
-
-        ref=$(python -c "import yaml; cfg = yaml.safe_load(open('{input.config}')); print(cfg['bwa_indices'].get('${{species}}', ''))")
-        if [ -z "$ref" ]; then
-            echo "Reference for species '$species' not found in {input.config}" >&2
-            exit 1
-        fi
-
-        damageprofiler -Xmx12G \
-            -i {input.bam} \
-            -o {output.dir} \
-            -r "$ref" > {log} 2>&1
-        """
+    params:
+        index_key="bwa_indices"
+    script:
+        "scripts/run_damageprofiler.py"
 
 import yaml
 
@@ -895,7 +888,14 @@ with open("config/config.yaml") as f:
 def get_host_ref(wc):
     """Look up host reference based on species file."""
     species_file = f"results/{wc.sample}/fastq_screen/{wc.sample}_best_species.txt"
-    species = open(species_file).read().strip()
+    # Defer reading until the file exists to avoid DAG build-time crashes
+    try:
+        if not os.path.exists(species_file):
+            return ""
+        with open(species_file) as f:
+            species = f.read().strip()
+    except FileNotFoundError:
+        return ""
     return CFG["bwa_indices"].get(species, "")
 
 rule softclip_bam_host:
@@ -1047,6 +1047,7 @@ rule index_dedup_bam_mtdna:
 rule damage_profiler_mtdna:
     input:
         bam = "results/{sample}/bwa_mtdna/{sample}.dedup.bam",
+        bai = "results/{sample}/bwa_mtdna/{sample}.dedup.bam.bai",
         species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt",
         config = "config/config.yaml"  # Correct path here
     output:
@@ -1055,23 +1056,10 @@ rule damage_profiler_mtdna:
         "logs/damageprofiler_mtdna/{sample}.log"
     conda:
         "workflow/envs/damageprofiler.yaml"
-    shell:
-        """
-        mkdir -p {output.dir}
-
-        species=$(cat {input.species_file})
-
-        ref=$(python -c "import yaml; cfg = yaml.safe_load(open('{input.config}')); print(cfg['mtDNA_indices'].get('${{species}}', ''))")
-        if [ -z "$ref" ]; then
-            echo "Reference for species '$species' not found in {input.config}" >&2
-            exit 1
-        fi
-
-        damageprofiler -Xmx12G \
-            -i {input.bam} \
-            -o {output.dir} \
-            -r "$ref" > {log} 2>&1
-        """
+    params:
+        index_key="mtDNA_indices"
+    script:
+        "scripts/run_damageprofiler.py"
 import yaml
 
 # Load config once globally
@@ -1081,7 +1069,14 @@ with open("config/config.yaml") as f:
 def get_mtDNA_ref(wc):
     """Look up mtDNA reference based on species file."""
     species_file = f"results/{wc.sample}/fastq_screen/{wc.sample}_best_species.txt"
-    species = open(species_file).read().strip()
+    # Defer reading until the file exists to avoid DAG build-time crashes
+    try:
+        if not os.path.exists(species_file):
+            return ""
+        with open(species_file) as f:
+            species = f.read().strip()
+    except FileNotFoundError:
+        return ""
     return CFG["mtDNA_indices"].get(species, "")
 
 rule softclip_bam_mtdna:
@@ -1127,17 +1122,23 @@ rule qualimap_bamqc_bwa_mtdna:
     shell:
         """
         mkdir -p results/{wildcards.sample}/qualimap_mtdna
-        ref=$(python - << 'PY'
+        species_ref=$(python - << 'PY'
 import json
 m = json.loads(r'''{params.ref_map}''')
-species = open("{input.species_file}").read().strip()
-print(m.get(species, ""))
+species = open("{input.species_file}", "r", encoding="utf-8", errors="ignore").read().strip()
+ref = m.get(species, "")
+print(species)
+print(ref)
 PY
         )
+        species=$(echo "$species_ref" | sed -n '1p')
+        ref=$(echo "$species_ref" | sed -n '2p')
         if [ -z "$ref" ]; then
             echo "Reference for species not found in config/config.yaml" >&2
             exit 1
         fi
+        # Ensure FASTA index exists for -T usage
+        if [ ! -s "$ref.fai" ]; then samtools faidx "$ref"; fi
         samtools view -hb -T "$ref" {input.bam} |
         qualimap --java-mem-size=9G bamqc -bam /dev/stdin -outdir results/{wildcards.sample}/qualimap_mtdna/ > {log} 2>&1
         """
