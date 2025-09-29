@@ -926,6 +926,7 @@ PY
         samtools view -@ {threads} -T "$ref" -O CRAM -o {output.cram}
         """
 
+
 rule qualimap_bamqc_bwa_host:
     input:
         bam = "results/{sample}/bwa_host/{sample}.dedup_q30_softclipped.cram",
@@ -940,20 +941,45 @@ rule qualimap_bamqc_bwa_host:
         ref_map = json.dumps(CFG["bwa_indices"])
     shell:
         """
-        mkdir -p results/{wildcards.sample}/qualimap/
-        ref=$(python - << 'PY'
+        mkdir -p results/{wildcards.sample}/qualimap
+
+        species_ref=$(python - << 'PY'
 import json
 m = json.loads(r'''{params.ref_map}''')
-species = open("{input.species_file}").read().strip()
-print(m.get(species, ""))
+species = open("{input.species_file}", "r", encoding="utf-8", errors="ignore").read().strip()
+ref = m.get(species, "")
+print(species)
+print(ref)
 PY
         )
+
+        species=$(echo "$species_ref" | sed -n '1p')
+        ref=$(echo "$species_ref" | sed -n '2p')
+
         if [ -z "$ref" ]; then
             echo "Reference for species not found in config/config.yaml" >&2
             exit 1
         fi
-        samtools view -hb -T "$ref" {input.bam} |
-        qualimap --java-mem-size=9G bamqc -bam /dev/stdin -outdir results/{wildcards.sample}/qualimap/ > {log} 2>&1
+
+        # Check if BAM has mapped reads (qualimap fails on empty BAMs)
+        mapped_count=$(samtools view -c -F 4 {input.bam})
+
+        if [ "$mapped_count" -eq 0 ]; then
+            echo "No mapped reads in {input.bam} for species $species. Skipping qualimap_host." >> {log}
+            echo "No mapped reads found in {input.bam} for species $species" > {output.txt}
+        else
+            # Ensure FASTA index exists for -T usage
+            if [ ! -s "$ref.fai" ]; then samtools faidx "$ref"; fi
+
+            samtools view -hb -T "$ref" {input.bam} |
+            qualimap --java-mem-size=9G bamqc -bam /dev/stdin -outdir results/{wildcards.sample}/qualimap/ > {log} 2>&1
+
+            # Defensive check
+            if [ ! -f {output.txt} ]; then
+                echo "Qualimap did not produce {output.txt}" >&2
+                exit 1
+            fi
+        fi
         """
 
 ####-----------------------------------------------------########mtDNA mapping#####----------------------------------------------------------------------------
@@ -1078,7 +1104,6 @@ def get_mtDNA_ref(wc):
     except FileNotFoundError:
         return ""
     return CFG["mtDNA_indices"].get(species, "")
-
 rule softclip_bam_mtdna:
     input:
         bam = "results/{sample}/bwa_mtdna/{sample}.dedup.bam",
@@ -1107,6 +1132,7 @@ PY
         samtools view -@ {threads} -T "$ref" -O CRAM -o {output.cram}
         """
 
+
 rule qualimap_bamqc_bwa_mtdna:
     input:
         bam = "results/{sample}/bwa_mtdna/{sample}.dedup_q30_softclipped.cram",
@@ -1122,6 +1148,7 @@ rule qualimap_bamqc_bwa_mtdna:
     shell:
         """
         mkdir -p results/{wildcards.sample}/qualimap_mtdna
+
         species_ref=$(python - << 'PY'
 import json
 m = json.loads(r'''{params.ref_map}''')
@@ -1131,16 +1158,34 @@ print(species)
 print(ref)
 PY
         )
+
         species=$(echo "$species_ref" | sed -n '1p')
         ref=$(echo "$species_ref" | sed -n '2p')
+
         if [ -z "$ref" ]; then
             echo "Reference for species not found in config/config.yaml" >&2
             exit 1
         fi
-        # Ensure FASTA index exists for -T usage
-        if [ ! -s "$ref.fai" ]; then samtools faidx "$ref"; fi
-        samtools view -hb -T "$ref" {input.bam} |
-        qualimap --java-mem-size=9G bamqc -bam /dev/stdin -outdir results/{wildcards.sample}/qualimap_mtdna/ > {log} 2>&1
+
+        # Check if BAM has mapped reads (qualimap fails on empty BAMs)
+        mapped_count=$(samtools view -c -F 4 {input.bam})
+
+        if [ "$mapped_count" -eq 0 ]; then
+            echo "No mapped reads in {input.bam} for species $species. Skipping qualimap_mtdna." >> {log}
+            echo "No mapped reads found in {input.bam} for species $species" > {output.txt}
+        else
+            # Ensure FASTA index exists for -T usage
+            if [ ! -s "$ref.fai" ]; then samtools faidx "$ref"; fi
+
+            samtools view -hb -T "$ref" {input.bam} |
+            qualimap --java-mem-size=9G bamqc -bam /dev/stdin -outdir results/{wildcards.sample}/qualimap_mtdna/ > {log} 2>&1
+
+            # Defensive check
+            if [ ! -f {output.txt} ]; then
+                echo "Qualimap did not produce {output.txt}" >&2
+                exit 1
+            fi
+        fi
         """
 
 
