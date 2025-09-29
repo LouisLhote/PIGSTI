@@ -13,6 +13,7 @@ import pandas as pd
 import re
 import csv
 from pathlib import Path
+import json
 
 
 # -------------------- Load sample info --------------------
@@ -900,23 +901,24 @@ def get_host_ref(wc):
 rule softclip_bam_host:
     input:
         bam = "results/{sample}/bwa_host/{sample}.dedup.bam",
-        species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt",
-        config = "config/config.yaml"
+        species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt"
     output:
         cram = "results/{sample}/bwa_host/{sample}.dedup_q30_softclipped.cram"
     threads: 4
     conda: "workflow/envs/soft_clip.yaml"  # only needs python=2.7 + samtools
+    params:
+        ref_map = json.dumps(CFG["bwa_indices"])
     shell:
         """
         ref=$(python - << 'PY'
-import yaml, sys
-cfg = yaml.safe_load(open("{input.config}"))
+import json
+m = json.loads(r'''{params.ref_map}''')
 species = open("{input.species_file}").read().strip()
-print(cfg["bwa_indices"].get(species, ""))
+print(m.get(species, ""))
 PY
         )
         if [ -z "$ref" ]; then
-            echo "Reference for species not found in {input.config}" >&2
+            echo "Reference for species not found in config/config.yaml" >&2
             exit 1
         fi
         samtools view -h {input.bam} |
@@ -927,35 +929,31 @@ PY
 rule qualimap_bamqc_bwa_host:
     input:
         bam = "results/{sample}/bwa_host/{sample}.dedup_q30_softclipped.cram",
-        species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt",
-        config = "config/config.yaml"
+        species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt"
     output:
         txt = "results/{sample}/qualimap/genome_results.txt"
     log:
         "logs/qualimap/{sample}.log"
     conda:
         "workflow/envs/qualimap.yaml"  # needs qualimap + samtools + java
+    params:
+        ref_map = json.dumps(CFG["bwa_indices"])
     shell:
         """
         mkdir -p results/{wildcards.sample}/qualimap/
         ref=$(python - << 'PY'
-import yaml, sys
-cfg = yaml.safe_load(open("{input.config}"))
+import json
+m = json.loads(r'''{params.ref_map}''')
 species = open("{input.species_file}").read().strip()
-print(cfg["bwa_indices"].get(species, ""))
+print(m.get(species, ""))
 PY
         )
         if [ -z "$ref" ]; then
-            echo "Reference for species not found in {input.config}" >&2
+            echo "Reference for species not found in config/config.yaml" >&2
             exit 1
         fi
         samtools view -hb -T "$ref" {input.bam} |
-        qualimap \
-            --java-mem-size=9G \
-            bamqc \
-            -bam /dev/stdin \
-            -outdir results/{wildcards.sample}/qualimap/ \
-            > {log} 2>&1
+        qualimap --java-mem-size=9G bamqc -bam /dev/stdin -outdir results/{wildcards.sample}/qualimap/ > {log} 2>&1
         """
 
 ####-----------------------------------------------------########mtDNA mapping#####----------------------------------------------------------------------------
@@ -1089,23 +1087,24 @@ def get_mtDNA_ref(wc):
 rule softclip_bam_mtdna:
     input:
         bam = "results/{sample}/bwa_mtdna/{sample}.dedup.bam",
-        species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt",
-        config = "config/config.yaml"
+        species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt"
     output:
         cram = "results/{sample}/bwa_mtdna/{sample}.dedup_q30_softclipped.cram"
     threads: 4
     conda: "workflow/envs/soft_clip.yaml"  # only needs python=2.7 + samtools
+    params:
+        ref_map = json.dumps(CFG["mtDNA_indices"])
     shell:
         """
         ref=$(python - << 'PY'
-import yaml, sys
-cfg = yaml.safe_load(open("{input.config}"))
+import json
+m = json.loads(r'''{params.ref_map}''')
 species = open("{input.species_file}").read().strip()
-print(cfg["mtDNA_indices"].get(species, ""))
+print(m.get(species, ""))
 PY
         )
         if [ -z "$ref" ]; then
-            echo "Reference for species not found in {input.config}" >&2
+            echo "Reference for species not found in config/config.yaml" >&2
             exit 1
         fi
         samtools view -h {input.bam} |
@@ -1116,35 +1115,31 @@ PY
 rule qualimap_bamqc_bwa_mtdna:
     input:
         bam = "results/{sample}/bwa_mtdna/{sample}.dedup_q30_softclipped.cram",
-        species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt",
-        config = "config/config.yaml"
+        species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt"
     output:
         txt = "results/{sample}/qualimap_mtdna/genome_results.txt"
     log:
         "logs/qualimap_mtdna/{sample}.log"
     conda:
         "workflow/envs/qualimap.yaml"  # needs qualimap + samtools + java
+    params:
+        ref_map = json.dumps(CFG["mtDNA_indices"])
     shell:
         """
         mkdir -p results/{wildcards.sample}/qualimap_mtdna
         ref=$(python - << 'PY'
-import yaml, sys
-cfg = yaml.safe_load(open("{input.config}"))
+import json
+m = json.loads(r'''{params.ref_map}''')
 species = open("{input.species_file}").read().strip()
-print(cfg["mtDNA_indices"].get(species, ""))
+print(m.get(species, ""))
 PY
         )
         if [ -z "$ref" ]; then
-            echo "Reference for species not found in {input.config}" >&2
+            echo "Reference for species not found in config/config.yaml" >&2
             exit 1
         fi
         samtools view -hb -T "$ref" {input.bam} |
-        qualimap \
-            --java-mem-size=9G \
-            bamqc \
-            -bam /dev/stdin \
-            -outdir results/{wildcards.sample}/qualimap_mtdna/ \
-            > {log} 2>&1
+        qualimap --java-mem-size=9G bamqc -bam /dev/stdin -outdir results/{wildcards.sample}/qualimap_mtdna/ > {log} 2>&1
         """
 
 
