@@ -900,22 +900,35 @@ def get_host_ref(wc):
 rule softclip_bam_host:
     input:
         bam = "results/{sample}/bwa_host/{sample}.dedup.bam",
-        ref = get_host_ref
+        species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt",
+        config = "config/config.yaml"
     output:
         cram = "results/{sample}/bwa_host/{sample}.dedup_q30_softclipped.cram"
     threads: 4
     conda: "workflow/envs/soft_clip.yaml"  # only needs python=2.7 + samtools
     shell:
         """
+        ref=$(python - << 'PY'
+import yaml, sys
+cfg = yaml.safe_load(open("{input.config}"))
+species = open("{input.species_file}").read().strip()
+print(cfg["bwa_indices"].get(species, ""))
+PY
+        )
+        if [ -z "$ref" ]; then
+            echo "Reference for species not found in {input.config}" >&2
+            exit 1
+        fi
         samtools view -h {input.bam} |
         python2 scripts/softclip_mod.py - 4 |
-        samtools view -@ {threads} -T {input.ref} -O CRAM -o {output.cram}
+        samtools view -@ {threads} -T "$ref" -O CRAM -o {output.cram}
         """
 
 rule qualimap_bamqc_bwa_host:
     input:
         bam = "results/{sample}/bwa_host/{sample}.dedup_q30_softclipped.cram",
-        ref = get_host_ref
+        species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt",
+        config = "config/config.yaml"
     output:
         txt = "results/{sample}/qualimap/genome_results.txt"
     log:
@@ -925,7 +938,18 @@ rule qualimap_bamqc_bwa_host:
     shell:
         """
         mkdir -p results/{wildcards.sample}/qualimap/
-        samtools view -hb -T {input.ref} {input.bam} |
+        ref=$(python - << 'PY'
+import yaml, sys
+cfg = yaml.safe_load(open("{input.config}"))
+species = open("{input.species_file}").read().strip()
+print(cfg["bwa_indices"].get(species, ""))
+PY
+        )
+        if [ -z "$ref" ]; then
+            echo "Reference for species not found in {input.config}" >&2
+            exit 1
+        fi
+        samtools view -hb -T "$ref" {input.bam} |
         qualimap \
             --java-mem-size=9G \
             bamqc \
@@ -1065,22 +1089,35 @@ def get_mtDNA_ref(wc):
 rule softclip_bam_mtdna:
     input:
         bam = "results/{sample}/bwa_mtdna/{sample}.dedup.bam",
-        ref = get_mtDNA_ref
+        species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt",
+        config = "config/config.yaml"
     output:
         cram = "results/{sample}/bwa_mtdna/{sample}.dedup_q30_softclipped.cram"
     threads: 4
     conda: "workflow/envs/soft_clip.yaml"  # only needs python=2.7 + samtools
     shell:
         """
+        ref=$(python - << 'PY'
+import yaml, sys
+cfg = yaml.safe_load(open("{input.config}"))
+species = open("{input.species_file}").read().strip()
+print(cfg["mtDNA_indices"].get(species, ""))
+PY
+        )
+        if [ -z "$ref" ]; then
+            echo "Reference for species not found in {input.config}" >&2
+            exit 1
+        fi
         samtools view -h {input.bam} |
         python2 scripts/softclip_mod.py - 4 |
-        samtools view -@ {threads} -T {input.ref} -O CRAM -o {output.cram}
+        samtools view -@ {threads} -T "$ref" -O CRAM -o {output.cram}
         """
 
 rule qualimap_bamqc_bwa_mtdna:
     input:
         bam = "results/{sample}/bwa_mtdna/{sample}.dedup_q30_softclipped.cram",
-        ref = get_mtDNA_ref
+        species_file = "results/{sample}/fastq_screen/{sample}_best_species.txt",
+        config = "config/config.yaml"
     output:
         txt = "results/{sample}/qualimap_mtdna/genome_results.txt"
     log:
@@ -1090,7 +1127,18 @@ rule qualimap_bamqc_bwa_mtdna:
     shell:
         """
         mkdir -p results/{wildcards.sample}/qualimap_mtdna
-        samtools view -hb -T {input.ref} {input.bam} |
+        ref=$(python - << 'PY'
+import yaml, sys
+cfg = yaml.safe_load(open("{input.config}"))
+species = open("{input.species_file}").read().strip()
+print(cfg["mtDNA_indices"].get(species, ""))
+PY
+        )
+        if [ -z "$ref" ]; then
+            echo "Reference for species not found in {input.config}" >&2
+            exit 1
+        fi
+        samtools view -hb -T "$ref" {input.bam} |
         qualimap \
             --java-mem-size=9G \
             bamqc \
