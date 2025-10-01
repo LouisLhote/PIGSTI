@@ -1,0 +1,6 @@
+sample	r1	r2	RGLB	sequencing_run
+Sample1	/path/to/data/Sample1_R1.fastq.gz	/path/to/data/Sample1_R2.fastq.gz	Sample1-LIB-001	Run1
+Sample2	/path/to/data/Sample2_R1.fastq.gz	/path/to/data/Sample2_R2.fastq.gz	Sample2-LIB-002	Run1
+Sample3	/path/to/data/Sample3_R1.fastq.gz		Sample3-LIB-003	Run2
+Sample4	/path/to/data/Sample4_R1.fastq.gz	/path/to/data/Sample4_R2.fastq.gz	Sample4-LIB-004	Run2
+Sample5	/path/to/data/Sample5_R1.fastq.gz	/path/to/data/Sample5_R2.fastq.gz	Sample5-LIB-005	Run3
