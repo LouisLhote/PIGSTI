@@ -10,38 +10,10 @@ A comprehensive bioinformatics pipeline for pathogen identification, genomic sur
 ## 🧬 Overview
 
 PIGSTI is a state-of-the-art bioinformatics pipeline designed for:
-- **Pathogen Detection**: Automated identification of pathogens from metagenomic data
-- **Ancient DNA Analysis**: Specialized tools for aDNA damage pattern analysis
-- **Host Genome Analysis**: Comprehensive host and mitochondrial DNA mapping
+- **Pathogen Detection**: Automated identification of ancient pathogens from metagenomic data
+- **Host Genome Identification**: Comprehensive host identification and endogenous estimation 
 - **Quality Control**: Extensive QC metrics and contamination screening
-- **Comparative Analysis**: Integration of multiple detection methods (KrakenUniq, HOPS, BWA)
 
-## ✨ Key Features
-
-### 🔍 **Multi-Method Pathogen Detection**
-- **KrakenUniq**: Taxonomic classification with unique k-mer counting
-- **HOPS**: Hierarchical Oligonucleotide Primer Signature analysis
-- **E-Score**: Statistical scoring for pathogen detection confidence
-- **BWA Alignment**: Targeted alignment to pathogen references
-
-### 🧬 **Ancient DNA Specialized Analysis**
-- **DamageProfiler**: DNA damage pattern analysis
-- **aDNA-BAMPlotter**: Visualization of ancient DNA characteristics
-- **Soft-clipping Analysis**: Detection of DNA damage patterns
-- **Entropy Profiling**: Sequence complexity analysis
-
-### 📊 **Comprehensive Monitoring & Visualization**
-- **Real-time Pipeline Monitoring**: Interactive execution heatmaps
-- **Step Completion Tracking**: Visual progress monitoring
-- **Execution Timing Analysis**: Performance metrics and bottleneck identification
-- **Workflow Visualization**: Interactive pipeline diagram
-- **Comprehensive Logging**: Detailed logs for every pipeline step
-
-### 🎯 **Smart Sample Processing**
-- **Adaptive Adapter Removal**: Automatic single-end vs paired-end detection
-- **Dynamic Pathogen Selection**: Post-Escore targeted analysis
-- **Quality-based Filtering**: Multi-level quality control
-- **Contamination Screening**: Host and contaminant detection
 
 ## 🚀 Quick Start
 
@@ -54,43 +26,53 @@ PIGSTI is a state-of-the-art bioinformatics pipeline designed for:
 
 ### Installation
 
-1. **Clone the repository**:
-```bash
-git clone https://github.com/yourusername/PIGSTI.git
+## 🔧 Installation                                                                                                                                                                                       [0/1810]
+# 1️⃣ Install Miniconda (Linux)
+
+If not already installed:
+
+### Download Miniconda installer (Linux, Python 3)
+```
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+```
+### Install Miniconda
+```
+bash Miniconda3-latest-Linux-x86_64.sh
+```
+
+### Follow prompts, then reload shell
+```
+source ~/.bashrc
+```
+
+# 2️⃣ Download PIGSTI and Install Snakemake
+
+### Clone the repository
+```
+git clone https://github.com/LouisLhote/PIGSTI.git
 cd PIGSTI
 ```
-
-2. **Set up the environment**:
-```bash
-# Create conda environment
-conda env create -f environment.yml
-
-# Or use mamba for faster installation
-mamba env create -f environment.yml
+### Create the conda environment from the provided YAML
+```
+conda env create -n pigsti-snake -f PIGSTI_snakemake.yaml
 ```
 
-3. **Configure the pipeline**:
-```bash
-# Edit configuration files
-cp config/config.yaml.example config/config.yaml
-cp config/samples.tsv.example config/samples.tsv
-
-# Update paths in config/config.yaml
-# Add your samples to config/samples.tsv
+### Activate the environment
 ```
-
-### Basic Usage
-
-```bash
-# Activate environment
-conda activate pigsti
-
-# Run the pipeline
-snakemake --cores 40 --use-conda --rerun-incomplete
-
-# Run with specific targets
-snakemake --cores 40 --use-conda results/pipeline_execution_report.html
+conda activate pigsti-snake
 ```
+---
+
+# ▶️ Running the Pipeline
+
+Once the environment is active, run the workflow with:
+```
+snakemake --cores <N> --use-conda
+```
+Replace `<N>` with the number of CPU cores you want to use.
+
+---
+
 
 ## 📁 Project Structure
 
@@ -226,43 +208,12 @@ snakemake --cores 40 --cluster "sbatch --cpus-per-task={threads} --mem={resource
 snakemake --cores 40 --dry-run
 ```
 
-## 📈 Monitoring & Troubleshooting
-
-### Real-time Monitoring
-
-The pipeline includes comprehensive monitoring capabilities:
-
-1. **Interactive Report**: Open `results/pipeline_execution_report.html` in your browser
-2. **Execution Heatmap**: Visual progress tracking for all samples and steps
-3. **Timing Analysis**: Performance metrics and bottleneck identification
-4. **Log Files**: Detailed logs in `logs/` directory
-
-### Common Issues
-
-**Issue**: `KeyError: 'Sample' not found in samples.tsv`
-**Solution**: Ensure all sample names in your analysis match exactly with `config/samples.tsv`
-
-**Issue**: `ValueError: no index available for pileup`
-**Solution**: The pipeline automatically creates BAM indices, but ensure sufficient disk space
-
-**Issue**: Conda environment creation fails
-**Solution**: Use `mamba` instead of `conda` for faster and more reliable package resolution
 
 ### Performance Optimization
 
 - **Memory**: Use `--resources mem_mb=32000` for memory-intensive steps
 - **Storage**: Ensure sufficient disk space (recommend 100GB+ per sample)
 - **Cores**: Optimal performance with 20-40 cores depending on sample size
-
-## 🧪 Testing
-
-```bash
-# Run test with example data
-snakemake --cores 4 --use-conda test_data/
-
-# Validate configuration
-snakemake --cores 1 --dry-run --configfile config/config.yaml
-```
 
 
 ## 📄 License
