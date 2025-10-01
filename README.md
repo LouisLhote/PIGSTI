@@ -24,9 +24,8 @@ PIGSTI is a state-of-the-art bioinformatics pipeline designed for:
 - **Python** 3.9+
 - **Linux/macOS** environment
 
-### Installation
 
-## 🔧 Installation                                                                                                                                                                                       [0/1810]
+## 🔧 Installation                                                                                                                                                                                    
 # 1️⃣ Install Miniconda (Linux)
 
 If not already installed:
@@ -197,18 +196,6 @@ snakemake --cores 40 --configfile custom_config.yaml
 # Override specific parameters
 snakemake --cores 40 --config min_read_length=50 quality_threshold=20
 ```
-
-
-### Performance Optimization
-
-- **Memory**: Use `--resources mem_mb=32000` for memory-intensive steps
-- **Storage**: Ensure sufficient disk space (recommend 100GB+ per sample)
-- **Cores**: Optimal performance with 20-40 cores depending on sample size
-
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 
 
