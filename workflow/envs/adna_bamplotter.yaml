@@ -1,0 +1,11 @@
+name: adna_bamplotter
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - matplotlib
+  - numpy
+  - samtools
+  - pip
+  - pip:
+      - pysam

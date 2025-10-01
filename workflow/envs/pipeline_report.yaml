@@ -1,0 +1,12 @@
+name: pipeline_report
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.9
+  - pandas
+  - matplotlib
+  - seaborn
+  - plotly
+  - networkx
+  - pillow
