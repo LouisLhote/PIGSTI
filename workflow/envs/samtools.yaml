@@ -1,6 +1,0 @@
-name: samtools
-channels:
-  - bioconda
-dependencies:
-  - samtools
-  - pigz

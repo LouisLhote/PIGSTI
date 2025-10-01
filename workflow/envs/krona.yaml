@@ -1,6 +1,0 @@
-name: krona
-channels:
-  - bioconda
-  - conda-forge
-dependencies:
-  - krona

@@ -1,7 +1,0 @@
-name: qualimap
-channels:
-  - bioconda
-  - conda-forge
-dependencies:
-  - qualimap
-  - openjdk

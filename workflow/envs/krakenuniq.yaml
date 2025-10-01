@@ -1,6 +1,0 @@
-name: krakenuniq
-channels:
-  - bioconda
-  - conda-forge
-dependencies:
-  - krakenuniq

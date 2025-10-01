@@ -1,7 +1,0 @@
-name: adapterremoval
-channels:
-  - bioconda
-  - conda-forge
-dependencies:
-  - adapterremoval
-  - cutadapt

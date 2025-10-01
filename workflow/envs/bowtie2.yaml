@@ -1,7 +1,0 @@
-name: bowtie2
-channels:
-  - bioconda
-  - conda-forge
-dependencies:
-  - bowtie2
-  - samtools
