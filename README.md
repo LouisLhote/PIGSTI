@@ -198,16 +198,6 @@ snakemake --cores 40 --configfile custom_config.yaml
 snakemake --cores 40 --config min_read_length=50 quality_threshold=20
 ```
 
-### Parallel Execution
-
-```bash
-# Run with cluster support
-snakemake --cores 40 --cluster "sbatch --cpus-per-task={threads} --mem={resources.mem_mb}"
-
-# Dry run to check workflow
-snakemake --cores 40 --dry-run
-```
-
 
 ### Performance Optimization
 
