@@ -67,6 +67,14 @@ def get_sample_ref_pairs():
                 pairs.append((sample, pathogen))
     return pairs
 
+def get_single_end_samples():
+    """Get samples that have no r2 reads (single-end only)"""
+    return [sample for sample in SAMPLES if not SAMPLES_DICT[sample]["r2"]]
+
+def get_paired_end_samples():
+    """Get samples that have r2 reads (paired-end)"""
+    return [sample for sample in SAMPLES if SAMPLES_DICT[sample]["r2"]]
+
 
 
 
@@ -223,11 +231,15 @@ rule all:
 
 
         # Final summary reports
-
         "results/final/host_mtdna_summary_all_samples.xlsx",
         "results/pathogen_bwa_complete.txt",
         "results/pathogen_detection/detection_scores_heatmap.pdf",
-        "results/pathogen_detection/detection_scores_matrix.csv"
+        "results/pathogen_detection/detection_scores_matrix.csv",
+
+        # Pipeline execution report and monitoring
+        "results/pipeline_execution_report.html",
+        "results/pipeline_timing_data.csv",
+        "results/pipeline_workflow_diagram.png"
 
 
 
@@ -240,8 +252,22 @@ def expand_downstream_targets(wildcards):
             bam = bam.strip()
             if not bam:
                 continue
-            sample, pathogen_file = Path(bam).stem.split("_", 1)
-            pathogen = pathogen_file.replace(".dedup", "")
+            # Extract sample name by finding the longest match in SAMPLES list
+            bam_stem = Path(bam).stem
+            sample = None
+            for s in SAMPLES:
+                if bam_stem.startswith(s + "_"):
+                    sample = s
+                    break
+            
+            if sample is None:
+                # Fallback to original logic if no match found
+                sample, pathogen_file = bam_stem.split("_", 1)
+                pathogen = pathogen_file.replace(".dedup", "")
+            else:
+                # Extract pathogen name after the sample name
+                pathogen_part = bam_stem[len(sample) + 1:]  # +1 for the underscore
+                pathogen = pathogen_part.replace(".dedup", "")
             targets.extend([
                 bam,
                 f"results/{sample}/bwa_pathogen/qualimap_{pathogen}",
@@ -480,7 +506,8 @@ rule Compute_ANI:
 
 rule MappingStats:
     input:
-        bam="results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam"
+        bam="results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam",
+        bai="results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam.bai"
     output:
         depth="results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.depth.txt",
         breadth="results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.breadth.txt",
@@ -513,38 +540,76 @@ rule EntropyProfile:
 
 # -------------------- Pathogen Tracker Preprocessing -----------------------
 
+def get_adapter_removal_inputs_pe(wc):
+    """Return inputs for paired-end adapter removal (only if r2 exists)"""
+    if wc.sample not in SAMPLES_DICT:
+        raise Exception(f"Sample '{wc.sample}' not found in samples.tsv. Available samples: {list(SAMPLES_DICT.keys())}")
+    if not SAMPLES_DICT[wc.sample]["r2"]:
+        # If no r2, this rule should not be applicable
+        raise Exception(f"Sample {wc.sample} has no r2 reads, paired-end rule not applicable")
+    return {
+        "r1": SAMPLES_DICT[wc.sample]["r1"][0],
+        "r2": SAMPLES_DICT[wc.sample]["r2"][0]
+    }
+
+def get_adapter_removal_inputs_se(wc):
+    """Return inputs for single-end adapter removal (only if r2 is absent)"""
+    if wc.sample not in SAMPLES_DICT:
+        raise Exception(f"Sample '{wc.sample}' not found in samples.tsv. Available samples: {list(SAMPLES_DICT.keys())}")
+    if SAMPLES_DICT[wc.sample]["r2"]:
+        # If r2 exists, this rule should not be applicable
+        raise Exception(f"Sample {wc.sample} has r2 reads, single-end rule not applicable")
+    return {
+        "r1": SAMPLES_DICT[wc.sample]["r1"][0]
+    }
+
 rule adapter_removal_pe:
     input:
-        r1 = lambda wc: SAMPLES_DICT[wc.sample]["r1"][0],
-        r2 = lambda wc: SAMPLES_DICT[wc.sample]["r2"][0]
+        r1 = lambda wc: get_adapter_removal_inputs_pe(wc)["r1"],
+        r2 = lambda wc: get_adapter_removal_inputs_pe(wc)["r2"]
     output:
         collapsed = "results/{sample}/adapter_removal/{sample}.collapsed.gz"
+    log:
+        "logs/adapter_removal/{sample}_pe.log"
     conda:
         "workflow/envs/adapterremoval.yaml"
     threads: 6
     shell:
         """
+        echo "Starting paired-end adapter removal for {wildcards.sample} at $(date)" > {log}
+        echo "Input R1: {input.r1}" >> {log}
+        echo "Input R2: {input.r2}" >> {log}
+        
         AdapterRemoval --file1 {input.r1} --file2 {input.r2} \
         --basename results/{wildcards.sample}/adapter_removal/{wildcards.sample} \
         --threads {threads} --collapse --minadapteroverlap 1 \
         --adapter1 AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC \
         --adapter2 AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT \
-        --minlength 30 --gzip --trimns --trimqualities
+        --minlength 30 --gzip --trimns --trimqualities >> {log} 2>&1
+        
+        echo "Paired-end adapter removal completed for {wildcards.sample} at $(date)" >> {log}
         """
 
 rule adapter_removal_se:
     input:
-        r1 = lambda wc: SAMPLES_DICT[wc.sample]["r1"][0]
+        r1 = lambda wc: get_adapter_removal_inputs_se(wc)["r1"]
     output:
         collapsed = "results/{sample}/adapter_removal/{sample}.collapsed.gz"
+    log:
+        "logs/adapter_removal/{sample}_se.log"
     conda:
         "workflow/envs/adapterremoval.yaml"
     threads: 6
     shell:
         """
+        echo "Starting single-end adapter removal for {wildcards.sample} at $(date)" > {log}
+        echo "Input R1: {input.r1}" >> {log}
+        
         cutadapt -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC \
                  -O 1 -m 30 \
-                 {input.r1} -o {output.collapsed} -j {threads}
+                 {input.r1} -o {output.collapsed} -j {threads} >> {log} 2>&1
+        
+        echo "Single-end adapter removal completed for {wildcards.sample} at $(date)" >> {log}
         """
 
 
@@ -610,14 +675,22 @@ rule krakenuniq:
     output:
         report="results/{sample}/krakenuniq/kraken-report.txt",
         output="results/{sample}/krakenuniq/output.txt"
+    log:
+        "logs/krakenuniq/{sample}.log"
     threads: 8
     conda:
         "workflow/envs/krakenuniq.yaml"
     shell:
         """
+        echo "Starting KrakenUniq classification for {wildcards.sample} at $(date)" > {log}
+        echo "Input FASTQ: {input.fastq}" >> {log}
+        echo "Database: {config[kraken_db]}" >> {log}
+        
         krakenuniq --preload --db {config[kraken_db]} --fastq-input {input.fastq} \
         --threads {threads} --output {output.output} --report-file {output.report} \
-        --gzip-compressed --only-classified-out
+        --gzip-compressed --only-classified-out >> {log} 2>&1
+        
+        echo "KrakenUniq classification completed for {wildcards.sample} at $(date)" >> {log}
         """
 rule escore:
     input:
@@ -1317,7 +1390,37 @@ rule calculate_pathogen_detection_scores:
         scores_matrix = "results/pathogen_detection/detection_scores_matrix.csv",
         scores_heatmap = "results/pathogen_detection/detection_scores_heatmap.pdf",
         detailed_scores = "results/pathogen_detection/detailed_scores.csv"
+    log:
+        "logs/pathogen_detection/calculation.log"
     conda:
         "workflow/envs/python.yaml"
+    shell:
+        """
+        echo "Starting pathogen detection score calculation at $(date)" > {log}
+        python scripts/calculate_detection_scores.py >> {log} 2>&1
+        echo "Pathogen detection score calculation completed at $(date)" >> {log}
+        """
+
+# Pipeline Execution Report and Monitoring
+rule generate_pipeline_report:
+    input:
+        # All major outputs to check completion
+        adapter_removal = expand("results/{sample}/adapter_removal/{sample}.collapsed.gz", sample=SAMPLES),
+        kraken_reports = expand("results/{sample}/krakenuniq/kraken-report.txt", sample=SAMPLES),
+        escore_files = expand("results/{sample}/Escore/pathogen/{sample}_pathogen.csv", sample=SAMPLES),
+        host_bams = expand("results/{sample}/bwa_host/{sample}.dedup.bam", sample=SAMPLES),
+        mtdna_bams = expand("results/{sample}/bwa_mtdna/{sample}.dedup.bam", sample=SAMPLES),
+        pathogen_scores = "results/pathogen_detection/detection_scores_matrix.csv",
+        # Log files for timing analysis
+        logs = expand("logs/adapter_removal/{sample}_*.log", sample=SAMPLES),
+        kraken_logs = expand("logs/krakenuniq/{sample}.log", sample=SAMPLES)
+    output:
+        execution_report = "results/pipeline_execution_report.html",
+        timing_data = "results/pipeline_timing_data.csv",
+        workflow_diagram = "results/pipeline_workflow_diagram.png"
+    log:
+        "logs/pipeline_report_generation.log"
+    conda:
+        "workflow/envs/pipeline_report.yaml"
     script:
-        "scripts/calculate_detection_scores.py"
+        "scripts/generate_pipeline_report.py"
