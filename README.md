@@ -1,4 +1,4 @@
-# 🐖 PIGSTI                                                                                                                                                                                                                                                                (Pathogen anImal Genome Sequence ToolkIt) is a Snakemake-based pipeline designed to **detect pathogens** and **screen animal endogenous DNA** in ancient DNA (aDNA) sequencing datasets.
+# 🐖 PIGSTI                                                                                                                                                                                                                                                                (Pathogen anImal Genome Sequence ToolkIt)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Snakemake](https://img.shields.io/badge/snakemake-≥7.0.0-brightgreen.svg)](https://snakemake.github.io)
