@@ -1,18 +1,137 @@
 taxID,Krakenuniq name,Hops name,bwa index,min_escore,min_reads
-10266,Sheeppox virus,Sheeppox virus 17077-99,/raid_md0/Reference_Genomes/Virus/Sheeppoxvirus/Sheeppoxvirus.fa,0,1
-186805,Goatpox virus,Goatpox virus Pellor,/raid_md0/Reference_Genomes/Virus/Goatpox_virus/Goatpox_virus.fa,0,1
-59509,Lumpy skin disease virus,Lumpy skin disease virus NI-2490,/raid_md0/Reference_Genomes/Virus/Lumpy_skin_disease_virus/Lumpy_skin_disease_virus.fa,0,1
-29459,Brucella melitensis,Brucella melitensis,/raid_md0/Reference_Genomes/Bacteria/Brucella_melitensis/Brucella_melitensis.fa,2,20
-238,Brucella abortus,Brucella abortus,/raid_md0/Reference_Genomes/Bacteria/Brucella_abortus/Brucella_abortus.fa,2,20
-236,Brucella ovis,Brucella ovis,/raid_md0/Reference_Genomes/Bacteria/Brucella_ovis/Brucella_ovis.fa,2,20
-29461,Brucella suis,Brucella suis,/raid_md0/Reference_Genomes/Bacteria/Brucella_suis/Brucella_suis.fa,2,20
-632,Yersinia pestis,Yersinia pestis,/raid_md0/Reference_Genomes/Bacteria/Yersinia_pestis/Yersinia_pestis.fa,5,40
-777,Coxiella burnetii,Coxiella burnetii,/raid_md0/Reference_Genomes/Bacteria/Coxiella_burnetii/Coxiella_burnetii.fa,5,20
-126793,Plasmodium vivax,Plasmodium vivax,/raid_md0/Reference_Genomes/eukaryotic_parasite/Plasmodium_vivax/Plasmodium_vivax.fa,5,50
-160,Treponema pallidum,Treponema pallidum,/raid_md0/Reference_Genomes/Bacteria/Treponema_pallidum/Treponema_pallidum.fa,5,50
-1773,Mycobacterium tuberculosis,Mycobacterium tuberculosis,/raid_md0/Reference_Genomes/Bacteria/Mycobacterium_tuberculosis/Mycobacterium_tuberculosis.fa,5,100
-630,Yersinia enterocolitica,Yersinia enterocolitica,/raid_md0/Reference_Genomes/Bacteria/Yersinia_enterocolitica_type05/Yersinia_enterocolitica_type05.fa,5,50
-2102,Mycoplasma mycoides,Mycoplasma mycoides,/raid_md0/Reference_Genomes/Bacteria/Mycoplasma_mycoides/Mycoplasma_mycoides.fa,5,50
-10258,ORF virus,ORF virus,/raid_md0/Reference_Genomes/Virus/ORF_virus/ORF_virus.fa,5,50
-10255,Variola virus,Variola virus,/raid_md0/Reference_Genomes/Virus/Smallpox/Smallpox.fa,0,5
-1504,Clostridium septicum,Clostridium septicum,/raid_md0/Reference_Genomes/Bacteria/Clostridium_septicum/Clostridium_septicum.fa,5,50
+10255,Variola virus,Variola virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Variola_virus/Variola_virus.fa,0,1
+10244,Monkeypox virus,Monkeypox virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Monkeypox_virus/Monkeypox_virus.fa,0,1
+10243,Cowpox virus,Cowpox virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Cowpox_virus/Cowpox_virus.fa,0,1
+10245,Vaccinia virus,Vaccinia virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Vaccinia_virus/Vaccinia_virus.fa,0,1
+10279,Camelpox virus,Camelpox virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Camelpox_virus/Camelpox_virus.fa,0,1
+10258,ORF virus,ORF virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/ORF_virus/ORF_virus.fa,0,1
+10266,Sheeppox virus,Sheeppox virus 17077-99,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Sheeppox_virus/Sheeppox_virus.fa,0,1
+186805,Goatpox virus,Goatpox virus Pellor,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Goatpox_virus/Goatpox_virus.fa,0,1
+59509,Lumpy skin disease virus,Lumpy skin disease virus NI-2490,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Lumpy_skin_disease_virus/Lumpy_skin_disease_virus.fa,0,1
+10275,Swinepox virus,Swinepox virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Swinepox_virus/Swinepox_virus.fa,0,1
+10273,Myxoma virus,Myxoma virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Myxoma_virus/Myxoma_virus.fa,0,1
+10280,Molluscum contagiosum virus,Molluscum contagiosum virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Molluscum_contagiosum_virus/Molluscum_contagiosum_virus.fa,0,1
+10277,Tanapox virus,Tanapox virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Tanapox_virus/Tanapox_virus.fa,0,1
+10278,Yaba monkey tumor virus,Yaba monkey tumor virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Yaba_monkey_tumor_virus/Yaba_monkey_tumor_virus.fa,0,1
+10263,Fowlpox virus,Fowlpox virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Fowlpox_virus/Fowlpox_virus.fa,0,1
+10264,Pigeonpox virus,Pigeonpox virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Pigeonpox_virus/Pigeonpox_virus.fa,0,1
+10260,Canarypox virus,Canarypox virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Canarypox_virus/Canarypox_virus.fa,0,1
+10262,Flamingopox virus,Flamingopox virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Flamingopox_virus/Flamingopox_virus.fa,0,1
+10265,Juncopox virus,Juncopox virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Juncopox_virus/Juncopox_virus.fa,0,1
+10266,Mynampox virus,Mynampox virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Mynampox_virus/Mynampox_virus.fa,0,1
+10267,Penguinpox virus,Penguinpox virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Penguinpox_virus/Penguinpox_virus.fa,0,1
+10268,Psittacinepox virus,Psittacinepox virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Psittacinepox_virus/Psittacinepox_virus.fa,0,1
+10269,Quailpox virus,Quailpox virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Quailpox_virus/Quailpox_virus.fa,0,1
+10270,Sparrowpox virus,Sparrowpox virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Sparrowpox_virus/Sparrowpox_virus.fa,0,1
+10271,Starlingpox virus,Starlingpox virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Starlingpox_virus/Starlingpox_virus.fa,0,1
+10272,Turkeypox virus,Turkeypox virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Turkeypox_virus/Turkeypox_virus.fa,0,1
+305674,Muledeerpox virus,Muledeerpox virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Muledeerpox_virus/Muledeerpox_virus.fa,0,1
+10282,Bovine herpesvirus 1,BHV1,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Bovine_herpesvirus_1/Bovine_herpesvirus_1.fa,0,1
+10920,Bovine papillomavirus 1,BPV1,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Bovine_papillomavirus_1/Bovine_papillomavirus_1.fa,0,1
+115514,Porcine circovirus 2,PCV2,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Porcine_circovirus_2/Porcine_circovirus_2.fa,0,1
+176531,Canine parvovirus 2,Canine parvovirus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Canine_parvovirus_2/Canine_parvovirus_2.fa,0,1
+10344,Fowl aviadenovirus A,FAdV_A,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Fowl_aviadenovirus_A/Fowl_aviadenovirus_A.fa,0,1
+10390,Marek's disease virus,Marek's disease virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Mareks_disease_virus/Mareks_disease_virus.fa,0,1
+10496,African swine fever virus,African swine fever virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/African_swine_fever_virus/African_swine_fever_virus.fa,0,1
+10792,Canine parvovirus,Canine parvovirus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Canine_parvovirus/Canine_parvovirus.fa,0,1
+11232,Canine distemper virus,Canine distemper virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Canine_distemper_virus/Canine_distemper_virus.fa,0,1
+11292,Rabies virus,Rabies virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Rabies_virus/Rabies_virus.fa,0,1
+11976,Feline calicivirus,Feline calicivirus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Feline_calicivirus/Feline_calicivirus.fa,0,1
+10320,Feline herpesvirus 1,Feline herpesvirus 1,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Feline_herpesvirus_1/Feline_herpesvirus_1.fa,0,1
+11676,Feline immunodeficiency virus,Feline immunodeficiency virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Feline_immunodeficiency_virus/Feline_immunodeficiency_virus.fa,0,1
+10318,Equine herpesvirus 1,Equine herpesvirus 1,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Equine_herpesvirus_1/Equine_herpesvirus_1.fa,0,1
+10320,Equine herpesvirus 4,Equine herpesvirus 4,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Equine_herpesvirus_4/Equine_herpesvirus_4.fa,0,1
+11777,Equine infectious anemia virus,EIAV,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Equine_infectious_anemia_virus/Equine_infectious_anemia_virus.fa,0,1
+11060,Bluetongue virus,Bluetongue virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Bluetongue_virus/Bluetongue_virus.fa,0,1
+11709,Maedi-Visna virus,Maedi Visna virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Maedi-Visna_virus/Maedi-Visna_virus.fa,0,1
+11657,Caprine arthritis encephalitis virus,CAEV,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Caprine_arthritis_encephalitis_virus/Caprine_arthritis_encephalitis_virus.fa,0,1
+31604,Peste des petits ruminants virus,PPRV,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Peste_des_petits_ruminants_virus/Peste_des_petits_ruminants_virus.fa,0,1
+11062,African horse sickness virus,African horse sickness virus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/African_horse_sickness_virus/African_horse_sickness_virus.fa,0,1
+1504,Clostridium septicum,Clostridium septicum,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Clostridium_septicum/Clostridium_septicum.fa,5,50
+29459,Brucella melitensis,Brucella melitensis,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Brucella_melitensis/Brucella_melitensis.fa,2,20
+238,Brucella abortus,Brucella abortus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Brucella_abortus/Brucella_abortus.fa,2,20
+236,Brucella ovis,Brucella ovis,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Brucella_ovis/Brucella_ovis.fa,2,20
+29461,Brucella suis,Brucella suis,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Brucella_suis/Brucella_suis.fa,2,20
+632,Yersinia pestis,Yersinia pestis,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Yersinia_pestis/Yersinia_pestis.fa,2,20
+777,Coxiella burnetii,Coxiella burnetii,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Coxiella_burnetii/Coxiella_burnetii.fa,2,20
+160,Treponema pallidum,Treponema pallidum,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Treponema_pallidum/Treponema_pallidum.fa,5,50
+1773,Mycobacterium tuberculosis,Mycobacterium tuberculosis,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Mycobacterium_tuberculosis/Mycobacterium_tuberculosis.fa,5,100
+630,Yersinia enterocolitica,Yersinia enterocolitica,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Yersinia_enterocolitica/Yersinia_enterocolitica.fa,2,20
+2102,Mycoplasma mycoides,Mycoplasma mycoides,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Mycoplasma_mycoides/Mycoplasma_mycoides.fa,5,50
+126793,Plasmodium vivax,Plasmodium vivax,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Plasmodium_vivax/Plasmodium_vivax.fa,5,50
+562,Escherichia coli,Escherichia coli,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Escherichia_coli/Escherichia_coli.fa,5,50
+1280,Staphylococcus aureus,Staphylococcus aureus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Staphylococcus_aureus/Staphylococcus_aureus.fa,5,50
+1313,Streptococcus pneumoniae,Streptococcus pneumoniae,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Streptococcus_pneumoniae/Streptococcus_pneumoniae.fa,5,50
+1423,Bacillus anthracis,Bacillus anthracis,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Bacillus_anthracis/Bacillus_anthracis.fa,5,50
+28901,Salmonella enterica,Salmonella enterica,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Salmonella_enterica/Salmonella_enterica.fa,5,50
+290,Pseudomonas aeruginosa,Pseudomonas aeruginosa,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Pseudomonas_aeruginosa/Pseudomonas_aeruginosa.fa,5,50
+1763,Mycobacterium leprae,Mycobacterium leprae,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Mycobacterium_leprae/Mycobacterium_leprae.fa,5,100
+1764,Mycobacterium bovis,Mycobacterium bovis,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Mycobacterium_bovis/Mycobacterium_bovis.fa,5,100
+1765,Mycobacterium avium,Mycobacterium avium,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Mycobacterium_avium/Mycobacterium_avium.fa,5,100
+338733,Staphylococcus pseudintermedius,Staphylococcus pseudintermedius,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Staphylococcus_pseudintermedius/Staphylococcus_pseudintermedius.fa,5,50
+1639,Listeria monocytogenes,Listeria monocytogenes,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Listeria_monocytogenes/Listeria_monocytogenes.fa,5,50
+1305,Streptococcus suis,Streptococcus suis,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Streptococcus_suis/Streptococcus_suis.fa,5,50
+747,Pasteurella multocida,Pasteurella multocida,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Pasteurella_multocida/Pasteurella_multocida.fa,5,50
+100,Chlamydia abortus,Chlamydia abortus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Chlamydia_abortus/Chlamydia_abortus.fa,5,50
+828,Chlamydia pecorum,Chlamydia pecorum,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Chlamydia_pecorum/Chlamydia_pecorum.fa,5,50
+835,Chlamydia psittaci,Chlamydia psittaci,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Chlamydia_psittaci/Chlamydia_psittaci.fa,5,50
+724909,Mycoplasma bovis,Mycoplasma bovis,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Mycoplasma_bovis/Mycoplasma_bovis.fa,5,50
+2191,Mycoplasma hyopneumoniae,Mycoplasma hyopneumoniae,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Mycoplasma_hyopneumoniae/Mycoplasma_hyopneumoniae.fa,5,50
+127,Anaplasma phagocytophilum,Anaplasma phagocytophilum,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Anaplasma_phagocytophilum/Anaplasma_phagocytophilum.fa,5,50
+945,Anaplasma marginale,Anaplasma marginale,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Anaplasma_marginale/Anaplasma_marginale.fa,5,50
+29654,Francisella tularensis,Francisella tularensis,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Francisella_tularensis/Francisella_tularensis.fa,5,50
+194,Legionella pneumophila,Legionella pneumophila,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Legionella_pneumophila/Legionella_pneumophila.fa,5,50
+581,Haemophilus influenzae,Haemophilus influenzae,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Haemophilus_influenzae/Haemophilus_influenzae.fa,5,50
+139,Borrelia burgdorferi,Borrelia burgdorferi,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Borrelia_burgdorferi/Borrelia_burgdorferi.fa,5,50
+29465,Borrelia recurrentis,Borrelia recurrentis,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Borrelia_recurrentis/Borrelia_recurrentis.fa,5,50
+783,Rickettsia rickettsii,Rickettsia rickettsii,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Rickettsia_rickettsii/Rickettsia_rickettsii.fa,5,50
+781,Rickettsia conorii,Rickettsia conorii,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Rickettsia_conorii/Rickettsia_conorii.fa,5,50
+782,Rickettsia prowazekii,Rickettsia prowazekii,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Rickettsia_prowazekii/Rickettsia_prowazekii.fa,5,50
+784,Orientia tsutsugamushi,Orientia tsutsugamushi,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Orientia_tsutsugamushi/Orientia_tsutsugamushi.fa,5,50
+5833,Plasmodium falciparum,Plasmodium falciparum,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Plasmodium_falciparum/Plasmodium_falciparum.fa,5,50
+5855,Plasmodium vivax,Plasmodium vivax,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Plasmodium_vivax/Plasmodium_vivax.fa,5,50
+5850,Plasmodium knowlesi,Plasmodium knowlesi,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Plasmodium_knowlesi/Plasmodium_knowlesi.fa,5,50
+5865,Babesia microti,Babesia microti,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Babesia_microti/Babesia_microti.fa,5,50
+5864,Babesia bovis,Babesia bovis,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Babesia_bovis/Babesia_bovis.fa,5,50
+5875,Theileria parva,Theileria parva,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Theileria_parva/Theileria_parva.fa,5,50
+5661,Leishmania donovani,Leishmania donovani,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Leishmania_donovani/Leishmania_donovani.fa,5,50
+5671,Leishmania infantum,Leishmania infantum,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Leishmania_infantum/Leishmania_infantum.fa,5,50
+5691,Trypanosoma brucei,Trypanosoma brucei,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Trypanosoma_brucei/Trypanosoma_brucei.fa,5,50
+5693,Trypanosoma cruzi,Trypanosoma cruzi,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Trypanosoma_cruzi/Trypanosoma_cruzi.fa,5,50
+5811,Toxoplasma gondii,Toxoplasma gondii,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Toxoplasma_gondii/Toxoplasma_gondii.fa,5,50
+5806,Cryptosporidium parvum,Cryptosporidium parvum,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Cryptosporidium_parvum/Cryptosporidium_parvum.fa,5,50
+5741,Giardia lamblia,Giardia lamblia,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Giardia_lamblia/Giardia_lamblia.fa,5,50
+5759,Entamoeba histolytica,Entamoeba histolytica,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Entamoeba_histolytica/Entamoeba_histolytica.fa,5,50
+6210,Echinococcus granulosus,Echinococcus granulosus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Echinococcus_granulosus/Echinococcus_granulosus.fa,5,50
+6211,Echinococcus multilocularis,Echinococcus multilocularis,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Echinococcus_multilocularis/Echinococcus_multilocularis.fa,5,50
+6204,Taenia solium,Taenia solium,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Taenia_solium/Taenia_solium.fa,5,50
+6208,Taenia saginata,Taenia saginata,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Taenia_saginata/Taenia_saginata.fa,5,50
+6334,Trichinella spiralis,Trichinella spiralis,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Trichinella_spiralis/Trichinella_spiralis.fa,5,50
+6253,Ascaris suum,Ascaris suum,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Ascaris_suum/Ascaris_suum.fa,5,50
+29170,Ancylostoma caninum,Ancylostoma caninum,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Ancylostoma_caninum/Ancylostoma_caninum.fa,5,50
+6248,Strongyloides stercoralis,Strongyloides stercoralis,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Strongyloides_stercoralis/Strongyloides_stercoralis.fa,5,50
+6183,Schistosoma mansoni,Schistosoma mansoni,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Schistosoma_mansoni/Schistosoma_mansoni.fa,5,50
+6185,Schistosoma haematobium,Schistosoma haematobium,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Schistosoma_haematobium/Schistosoma_haematobium.fa,5,50
+6182,Schistosoma japonicum,Schistosoma japonicum,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Schistosoma_japonicum/Schistosoma_japonicum.fa,5,50
+6279,Haemonchus contortus,Haemonchus contortus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Haemonchus_contortus/Haemonchus_contortus.fa,5,50
+45464,Teladorsagia circumcincta,Teladorsagia circumcincta,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Teladorsagia_circumcincta/Teladorsagia_circumcincta.fa,5,50
+6192,Fasciola hepatica,Fasciola hepatica,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Fasciola_hepatica/Fasciola_hepatica.fa,5,50
+5037,Histoplasma capsulatum,Histoplasma capsulatum,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Histoplasma_capsulatum/Histoplasma_capsulatum.fa,5,50
+5501,Coccidioides immitis,Coccidioides immitis,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Coccidioides_immitis/Coccidioides_immitis.fa,5,50
+5207,Cryptococcus neoformans,Cryptococcus neoformans,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Cryptococcus_neoformans/Cryptococcus_neoformans.fa,5,50
+746128,Aspergillus fumigatus,Aspergillus fumigatus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Aspergillus_fumigatus/Aspergillus_fumigatus.fa,5,50
+38323,Bartonella henselae,Bartonella henselae,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Bartonella_henselae/Bartonella_henselae.fa,5,50
+28188,Capnocytophaga canimorsus,Capnocytophaga canimorsus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Capnocytophaga_canimorsus/Capnocytophaga_canimorsus.fa,5,50
+1341,Streptococcus canis,Streptococcus canis,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Streptococcus_canis/Streptococcus_canis.fa,5,50
+32257,Mycoplasma haemofelis,Mycoplasma haemofelis,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Mycoplasma_haemofelis/Mycoplasma_haemofelis.fa,5,50
+1719,Corynebacterium pseudotuberculosis,Corynebacterium pseudotuberculosis,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Corynebacterium_pseudotuberculosis/Corynebacterium_pseudotuberculosis.fa,5,100
+75985,Mannheimia haemolytica,Mannheimia haemolytica,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Mannheimia_haemolytica/Mannheimia_haemolytica.fa,5,50
+75686,Pasteurella trehalosi,Pasteurella trehalosi,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Pasteurella_trehalosi/Pasteurella_trehalosi.fa,5,50
+2110,Mycoplasma agalactiae,Mycoplasma agalactiae,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Mycoplasma_agalactiae/Mycoplasma_agalactiae.fa,5,50
+45362,Mycoplasma capricolum subsp. capripneumoniae,Mycoplasma capripneumoniae,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Mycoplasma_capricolum_subsp_capripneumoniae/Mycoplasma_capricolum_subsp_capripneumoniae.fa,5,50
+83554,Chlamydophila abortus,Chlamydophila abortus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Chlamydophila_abortus/Chlamydophila_abortus.fa,5,50
+13373,Burkholderia mallei,Burkholderia mallei,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Burkholderia_mallei/Burkholderia_mallei.fa,5,50
+28450,Burkholderia pseudomallei,Burkholderia pseudomallei,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Burkholderia_pseudomallei/Burkholderia_pseudomallei.fa,5,50
+1336,Streptococcus equi subsp. equi,Streptococcus equi equi,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Streptococcus_equi_subsp_equi/Streptococcus_equi_subsp_equi.fa,5,50
+1335,Streptococcus equi subsp. zooepidemicus,Streptococcus equi zooepidemicus,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Streptococcus_equi_subsp_zooepidemicus/Streptococcus_equi_subsp_zooepidemicus.fa,5,50
+1644,Rhodococcus equi,Rhodococcus equi,/raid_md0/Reference_Genomes/PIGSTI_pathogens/Rhodococcus_equi/Rhodococcus_equi.fa,5,50
