@@ -9,6 +9,7 @@ Generates comprehensive reports including:
 
 import os
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime
@@ -302,8 +303,19 @@ def generate_html_report(timing_df, completion_df, heatmap_fig, workflow_fig):
     
     # Calculate summary statistics
     total_samples = len(completion_df)
-    completed_steps = completion_df.drop(columns=['sample']).sum().sum()
-    total_possible_steps = total_samples * (len(completion_df.columns) - 1)
+    
+    # Only sum numeric columns (exclude datetime columns)
+    numeric_cols = completion_df.select_dtypes(include=[np.number]).columns
+    if 'sample' in numeric_cols:
+        numeric_cols = numeric_cols.drop('sample')
+    
+    if len(numeric_cols) > 0:
+        completed_steps = completion_df[numeric_cols].sum().sum()
+        total_possible_steps = total_samples * len(numeric_cols)
+    else:
+        completed_steps = 0
+        total_possible_steps = 0
+    
     completion_rate = (completed_steps / total_possible_steps) * 100 if total_possible_steps > 0 else 0
     
     # Generate HTML content
@@ -339,12 +351,12 @@ def generate_html_report(timing_df, completion_df, heatmap_fig, workflow_fig):
         
         <div class="section">
             <h2>Execution Heatmap</h2>
-            {heatmap_fig.to_html(full_html=False, include_plotlyjs='cdn')}
+            {heatmap_fig.to_html(full_html=False, include_plotlyjs='cdn') if heatmap_fig is not None else '<p>No timing data available for heatmap</p>'}
         </div>
         
         <div class="section">
             <h2>Pipeline Workflow Diagram</h2>
-            {workflow_fig.to_html(full_html=False, include_plotlyjs='cdn')}
+            {workflow_fig.to_html(full_html=False, include_plotlyjs='cdn') if workflow_fig is not None else '<p>Workflow diagram not available</p>'}
         </div>
         
         <div class="section">
