@@ -22,7 +22,7 @@ VIRUS_ACCESSIONS = {
     "Vaccinia virus": "NC_006998.1",
     "Variola virus": "NC_001611.1",
     "ORF virus": "NC_001899.1",
-    "Sheeppox virus": "NC_002731.1",
+    "Sheeppox virus": "NC_004002.1",
     "Goatpox virus": "NC_004003.1",
     "Lumpy skin disease virus": "NC_003027.1",
     "Swinepox virus": "NC_003389.1",
@@ -316,8 +316,19 @@ def download_genome_efetch(taxid, name, tmpdir, env_name="pigsti_pathogens"):
         if os.path.exists(fasta_path) and os.path.getsize(fasta_path) > 1000:  # At least 1KB
             print(f"✅ Downloaded via efetch: {name}")
             return fasta_path
+        else:
+            file_size = os.path.getsize(fasta_path) if os.path.exists(fasta_path) else 0
+            print(f"❌ efetch succeeded but file too small ({file_size} bytes) for {name}")
+            print(f"   Expected file: {fasta_path}")
+            if os.path.exists(fasta_path) and file_size > 0:
+                with open(fasta_path, 'r') as f:
+                    content = f.read()[:200]  # First 200 chars
+                    print(f"   Content preview: {repr(content)}")
+    else:
+        print(f"❌ efetch failed for {name} (return code: {result.returncode if result else 'None'})")
+        if result and result.stderr:
+            print(f"   Error: {result.stderr}")
     
-    print(f"❌ efetch failed for {name}")
     return None
 
 def download_genome_curl(taxid, name, tmpdir, env_name="pigsti_pathogens"):
@@ -341,7 +352,16 @@ def download_genome_curl(taxid, name, tmpdir, env_name="pigsti_pathogens"):
                 print(f"✅ Downloaded via curl: {name}")
                 return fasta_path
             else:
-                print(f"❌ curl returned code {result.returncode if result else 'None'} for {name}")
+                if result and result.returncode == 0:
+                    file_size = os.path.getsize(fasta_path) if os.path.exists(fasta_path) else 0
+                    print(f"❌ curl succeeded but file too small ({file_size} bytes) or missing for {name}")
+                    print(f"   Expected file: {fasta_path}")
+                    if os.path.exists(fasta_path) and file_size > 0:
+                        with open(fasta_path, 'r') as f:
+                            content = f.read()[:200]  # First 200 chars
+                            print(f"   Content preview: {repr(content)}")
+                else:
+                    print(f"❌ curl returned code {result.returncode if result else 'None'} for {name}")
         except Exception as e:
             print(f"❌ curl failed for {name}: {e}")
             continue
@@ -454,6 +474,23 @@ def download_genome(taxid, name, hops_name, dataset_type, outdir, env_name="pigs
                         print(f"✅ Downloaded via alternative method: {name}")
                 except Exception as e:
                     print(f"❌ Alternative method failed for {name}: {e}")
+        
+        # Method 6: Try searching for representative sequences
+        if not source_fasta:
+            print(f"🔄 Trying representative sequence search for {name}...")
+            search_cmd = ["esearch", "-db", "nuccore", "-query", f'"{name}"[Organism] AND representative[filter]', "-format", "acc"]
+            result = run_command(search_cmd, check=False, env_name=env_name)
+            
+            if result and result.returncode == 0 and result.stdout.strip():
+                accessions = result.stdout.strip().split('\n')[:3]  # Try first 3 accessions
+                for acc in accessions:
+                    acc = acc.strip()
+                    if acc:
+                        print(f"📥 Trying representative accession {acc} for {name}...")
+                        acc_fasta = download_genome_specific_accession(name, acc, tmpdir, env_name)
+                        if acc_fasta:
+                            source_fasta = acc_fasta
+                            break
         
         if not source_fasta:
             print(f"❌ All download methods failed for {name}")
