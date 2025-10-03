@@ -523,12 +523,23 @@ def get_ref_path(wc):
 rule damageprofiler:
     input:
         bam = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam",
-        ref = get_ref_path
+        ref = get_ref_path,
+        fai_ready = "results/index_status/faidx_{ref_name_safe}.done"
     output:
         directory("results/{sample}/bwa_pathogen/damageprofiler_{ref_name_safe}")
     conda: "workflow/envs/damageprofiler.yaml"
     shell:
         "damageprofiler -i {input.bam} -o {output} -r {input.ref}"
+
+rule fasta_index:
+    input:
+        ref = get_ref_path
+    output:
+        done = "results/index_status/faidx_{ref_name_safe}.done"
+    conda:
+        "workflow/envs/samtools.yaml"
+    shell:
+        "samtools faidx {input.ref} && mkdir -p results/index_status && touch {output.done}"
 rule adna_bamplotter:
     input:
         bam = "results/{sample}/bwa_pathogen/{sample}_{ref_name_safe}.dedup.bam",
