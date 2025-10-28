@@ -529,7 +529,17 @@ rule damageprofiler:
         directory("results/{sample}/bwa_pathogen/damageprofiler_{ref_name_safe}")
     conda: "workflow/envs/damageprofiler.yaml"
     shell:
-        "damageprofiler -i {input.bam} -o {output} -r {input.ref}"
+        """
+        mkdir -p {output}
+        mapped_count=$(samtools view -c -F 4 {input.bam})
+        if [ "$mapped_count" -eq 0 ]; then
+            echo "No mapped reads in {input.bam}. Skipping DamageProfiler." >&2
+            : > {output}/misincorporation.txt
+            echo "No mapped reads. DamageProfiler skipped." > {output}/NO_MAPPED_READS.txt
+        else
+            damageprofiler -i {input.bam} -o {output} -r {input.ref}
+        fi
+        """
 
 rule fasta_index:
     input:
