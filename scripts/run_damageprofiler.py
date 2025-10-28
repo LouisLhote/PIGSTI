@@ -77,6 +77,36 @@ def main():
         with open(log_path, "a") as lf:
             lf.write(f"[run_damageprofiler] species={species} ref={ref_path}\n")
 
+    # If BAM has zero mapped reads, create placeholder outputs and exit successfully
+    try:
+        mapped_proc = subprocess.run(["samtools", "view", "-c", "-F", "4", bam], capture_output=True, text=True, check=True)
+        mapped_count = int(mapped_proc.stdout.strip() or 0)
+    except Exception as e:
+        msg = f"Failed to count mapped reads in BAM: {e}"
+        print(msg, file=sys.stderr)
+        if log_path:
+            with open(log_path, "a") as lf:
+                lf.write(msg + "\n")
+        # Be conservative: if we cannot count, continue to try DP
+        mapped_count = None
+
+    if mapped_count == 0:
+        note_path = os.path.join(out_dir, "NO_MAPPED_READS.txt")
+        try:
+            with open(note_path, "w") as nf:
+                nf.write(f"No mapped reads found in {bam}. DamageProfiler skipped.\n")
+            # Create placeholder file expected by downstream, if any
+            placeholder = os.path.join(out_dir, "misincorporation.txt")
+            with open(placeholder, "w") as pf:
+                pf.write("")
+        except Exception as e:
+            print(f"Failed to write placeholder outputs: {e}", file=sys.stderr)
+            sys.exit(1)
+        if log_path:
+            with open(log_path, "a") as lf:
+                lf.write("No mapped reads. Skipping DamageProfiler and creating placeholders.\n")
+        sys.exit(0)
+
     cmd = [
         "damageprofiler",
         "-Xmx12G",
