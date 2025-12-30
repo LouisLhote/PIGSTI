@@ -5,3 +5,4 @@ channels:
 dependencies:
   - python=2.7
   - samtools
+  - ncurses
