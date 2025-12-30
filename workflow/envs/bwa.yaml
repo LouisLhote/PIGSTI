@@ -6,3 +6,4 @@ channels:
 dependencies:
   - bwa
   - samtools
+  - ncurses
