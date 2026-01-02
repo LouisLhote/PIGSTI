@@ -1,7 +1,8 @@
 name: qualimap
 channels:
-  - bioconda
   - conda-forge
+  - bioconda
 dependencies:
+  - python=3.10
   - qualimap
-  - openjdk
+  - samtools=1.21
