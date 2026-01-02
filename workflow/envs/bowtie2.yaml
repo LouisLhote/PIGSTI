@@ -1,8 +1,8 @@
 name: bowtie2
 channels:
-  - bioconda
   - conda-forge
+  - bioconda
 dependencies:
-  - bowtie2
-  - samtools
-  - ncurses
+  - python=3.10
+  - bowtie2=2.5.4
+  - samtools=1.21
