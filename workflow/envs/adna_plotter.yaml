@@ -1,13 +1,12 @@
 name: adna_plotter
 channels:
-  - bioconda
   - conda-forge
+  - bioconda
 dependencies:
   - python=3.10
-  - matplotlib
-  - pandas
-  - tqdm
-  - pysam
-  - pysamstats
   - numpy
-
+  - pandas
+  - matplotlib
+  - tqdm
+  - pysam=0.22.1
+  - pysamstats=1.1.2
