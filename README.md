@@ -44,9 +44,9 @@ PIGSTI (**P**athogen an**I**mal **G**enome **S**equence **T**oolk**I**t) is a mo
 At a high level (see **Figure 1**):
 
 1. **Preprocessing** — adapter trimming and quality filtering (**AdapterRemoval** for paired-end with collapse; **cutadapt** for single-end).
-2. **Host route** — competitive host identification on collapsed reads (**FastQ Screen**): species with the highest total mapped reads and the highest *one-hit-one-genome* count; optional full-dataset rescreen when endogenous content is very low (`fastq_screen_full_dataset_rescreen`). PIGSTI flags **human contamination**. Nuclear and mitochondrial mapping (**BWA** or **Bowtie2**), PCR replicate merging (**samtools**), terminal soft-clipping, **DamageProfiler**, **Qualimap**, endogenous DNA estimates, and optional genetic sexing (Cow, Goat, Sheep, Dog).
-3. **Metagenomics route** — in parallel, exact-duplicate removal and complexity filtering (**PRINSEQ++**), mammalian read depletion against a multi-host chimera index (**Bowtie2**), pooling of libraries, **KrakenUniq** classification (optional **MALT/HOPS**, optional **decOM** source tracking).
-4. **Pathogen route** — candidates from Guellil **E-value** screening (default) **∪ optional HOPS**, with per-pathogen thresholds in the spreadsheet; reference mapping (**BWA** or **Bowtie2**); **authentication** with a composite score out of 10 (or 13 with HOPS): KrakenUniq reads, E-value, ANI, relative entropy, breadth ratio, edit-distance decay (damaged / non-damaged), 5′ C→T damage, mapping ratio, and genus rank.
+2. **Host route** — competitive host identification on collapsed reads (**FastQ Screen** / Bowtie2): species with the highest total mapped reads and the highest *one-hit-one-genome* count; optional full-dataset rescreen when endogenous content is very low (`fastq_screen_full_dataset_rescreen`). PIGSTI flags **human contamination**. Nuclear and mitochondrial mapping (**BWA** or **Bowtie2**), PCR replicate merging (**samtools**), 4 bp terminal soft-clipping (`softclip_mod.py`), **DamageProfiler**, **Qualimap**, endogenous DNA estimates, and optional genetic sexing (cattle, goat, sheep, dog).
+3. **Metagenomics route** — in parallel, exact-duplicate removal and complexity filtering (**PRINSEQ++**), mammalian read depletion against a multi-host chimera index (**Bowtie2**), pooling of libraries, optional **decOM** source tracking, then **KrakenUniq** classification (optional **MALT/HOPS**).
+4. **Pathogen route** — candidates from Guellil **E-value** screening (default) **∪ optional HOPS**, with per-pathogen thresholds in the spreadsheet; reference mapping (**BWA** or **Bowtie2**); **authentication** with a composite score out of 10 (or 13 with HOPS): KrakenUniq reads, E-value, relative entropy, edit-distance decay (damaged / non-damaged), 5′ C→T damage, ANI, breadth ratio, mapping ratio, and genus rank.
 5. **Reports** — cohort Excel tables, per-pathogen PDFs, and a run provenance manifest.
 
 **Two IDs matter throughout**
@@ -234,11 +234,11 @@ Screening uses KrakenUniq clade read count (default **≥ 50**) and Guellil **E-
 |-----------|---------|------|
 | KrakenUniq clade reads | ≥ 50 | Screening abundance |
 | Guellil E-value *E = (K/R) × C* | > 0.001 | Screening confidence |
-| ANI | > 96.5% | Similarity to the reference |
 | Relative entropy | ≥ 0.9 (virus ≥ 0.7) | Evenness of read starts (100 bp / 1 kb windows) |
-| Breadth ratio | ≥ 0.8 | Observed / expected Poisson breadth |
 | Edit-distance decay (damaged / non-damaged) | ≥ 0.65 / ≥ 0.55 | Terminal-deamination split; composite decay score |
 | 5′ C→T damage | ≥ 0.01 | Postmortem deamination (DamageProfiler) |
+| ANI | > 96.5% | Similarity to the reference |
+| Breadth ratio | ≥ 0.8 | Observed / expected Poisson breadth |
 | Mapping ratio | ≥ 0.5 | Mapped vs KrakenUniq-assigned reads |
 | Genus ranking | = 1 | Dominant genus-level KrakenUniq hit |
 | HOPS / MaltExtract (optional) | +3 criteria | Edit-distance decline, terminal damage, damaged ED = 0 |
@@ -262,10 +262,10 @@ Screening uses KrakenUniq clade read count (default **≥ 50**) and Guellil **E-
 | Stage | Function | Tool |
 |-------|----------|------|
 | Preprocessing | Adapter / quality trim | **AdapterRemoval** (PE) · **cutadapt** (SE) |
-| Host ID | Competitive mapping | **FastQ Screen** |
+| Host ID | Competitive mapping | **FastQ Screen** (Bowtie2) |
 | Host / mtDNA | Alignment · dedup | **BWA aln** or **Bowtie2** · **samtools** / **Picard** |
-| Host QC | Damage · mapping QC · soft-clip | **DamageProfiler** · **Qualimap2** · `softclip_mod.py` |
-| Host QC | Genetic sex (optional) | Residual method (Cow, Goat, Sheep, Dog) |
+| Host QC | Damage · mapping QC · soft-clip | **DamageProfiler** · **Qualimap2** · `softclip_mod.py` (4 bp) |
+| Host QC | Genetic sex (optional) | Residual method (cattle, goat, sheep, dog) |
 | Metagenomics | Dedup · host removal | **PRINSEQ++** · **Bowtie2** (chimera index) |
 | Metagenomics | Classification · optional | **KrakenUniq** · **HOPS/MALT** · **decOM** |
 | Pathogen | Detection · mapping · auth | Guellil **E-value** · **BWA/Bowtie2** · composite score |

@@ -11,7 +11,7 @@ These definitions match the PIGSTI software paper (*F1000Research*, in preparati
 | Block | Criteria | Points |
 |-------|----------|--------|
 | Screening | KrakenUniq clade read count; Guellil E-value | 2 |
-| Mapping authentication | Relative entropy; edit-distance decay (damaged); edit-distance decay (non-damaged); postmortem damage; ANI; breadth ratio; mapping ratio; genus rank | 8 |
+| Mapping authentication | Relative entropy; edit-distance decay (damaged); edit-distance decay (non-damaged); postmortem damage; ANI; breadth ratio; mapping ratio; genus rank (Methods order) | 8 |
 | Optional HOPS | MaltExtract edit-distance decline; terminal aDNA damage; damaged reads among edit distance 0 | +3 |
 | **Total** | | **10** (or **13** with HOPS) |
 

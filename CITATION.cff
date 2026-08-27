@@ -26,9 +26,9 @@ keywords:
   - HOPS
 abstract: >-
   PIGSTI (Pathogen anImal Genome Sequence ToolkIt) is a Snakemake pipeline for
-  screening and detecting pathogens in shotgun sequencing data from ancient animal
-  remains. It performs competitive host species identification, host and mtDNA
-  genome mapping, KrakenUniq-based metagenomic screening with Guellil E-value
-  filtering (optional HOPS validation), pathogen reference mapping, and
-  multi-criteria authentication, producing outputs suitable for population
-  genetics and phylogenetic analyses.
+  the initial screening and detection of pathogens in shotgun sequencing data
+  from ancient animal remains. It performs competitive host species
+  identification (FastQ Screen), host and mtDNA genome mapping, KrakenUniq-based
+  metagenomic screening with Guellil E-value filtering (optional HOPS
+  validation), pathogen reference mapping, and multi-criteria authentication,
+  producing outputs suitable for population genetics and phylogenetic analyses.

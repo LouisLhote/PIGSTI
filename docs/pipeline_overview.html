@@ -125,8 +125,9 @@
     <div class="hero-inner">
       <h1>PIGSTI pipeline overview</h1>
       <p>
-        Modular Snakemake workflow for ancient animal palaeogenomics: host species identification,
-        host/mtDNA mapping, KrakenUniq metagenomics, and multi-criteria pathogen authentication.
+        Modular Snakemake workflow for animal palaeogenomics: competitive host identification,
+        host/mtDNA mapping, KrakenUniq metagenomics (Guellil E-value ± HOPS), and
+        multi-criteria pathogen authentication (score out of 10 / 13).
       </p>
       <div class="links">
         <a href="CONFIG.md">CONFIG.md</a>
@@ -238,6 +239,7 @@ flowchart TB
     <section class="panel">
       <h2>Extras not shown on every edge</h2>
       <ul style="margin:0.25rem 0 0;padding-left:1.1rem;">
+        <li><strong>Terminal soft-clip</strong> — 4 bp soft-clipping on merged host BAMs (<code>softclip_mod.py</code>) after damage profiling.</li>
         <li><strong>PCR vs bio sample</strong> — merges and Kraken use biological <code>sample</code>; most mapping is per PCR under <code>results/libraries/</code>.</li>
         <li><strong>Index build</strong> — <code>check_and_build_indices</code> for pathogen/host/mt refs before mapping.</li>
         <li><strong>Checkpoint</strong> — pathogen targets from cohort checkpoint; rules expand from <code>pathogen_targets.txt</code>.</li>
