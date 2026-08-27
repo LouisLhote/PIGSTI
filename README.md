@@ -46,7 +46,7 @@ At a high level (see **Figure 1**):
 2. **Host route** — identify the best host species (**FastQ Screen**), map nuclear and mitochondrial genomes (**BWA** or **Bowtie2**), merge PCR replicates per biological sample (**samtools**), then soft-clipping, **DamageProfiler**, **Qualimap**, and optional genetic sexing.
 3. **Metagenomics screening** — complexity filter and deduplication (**PRINSEQ++**), removal of mammalian reads against a chimera index (**Bowtie2**), pooling of libraries, classification with **KrakenUniq** (optional **MALT/HOPS**, optional **decOM** source tracking).
 4. **Pathogen route** — candidate selection with Guellil **E-value** (default) and/or **HOPS**, mapping to pathogen references, then **authentication** with a composite score (ANI, entropy, breadth, 5′ C→T damage, edit distance, mapping ratio, genus rank).
-5. **Reports** — cohort Excel tables, per-pathogen PDFs, and a run provenance manifest.
+5. **Reports** — cohort Excel tables, per-pathogen PDFs.
 
 **Two IDs matter throughout**
 
