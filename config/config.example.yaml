@@ -29,8 +29,8 @@ pathogen_spreadsheet: "config/Pathogen_spreadsheet.csv"
 # --- Alignment ---
 host_aligner: bwa          # bwa | bowtie2
 pathogen_aligner: bwa      # bwa | bowtie2
-# default: Bowtie2-unmapped reads
-# super_careful: Non-concatenated host-unmapped reads
+# default (recommended): pooled Bowtie2-unmapped reads for pathogen mapping
+# super_careful: per-PCR host-unmapped reads (requires host mapping)
 pathogen_mapping_mode: default
 dedup_tool: "samtools"     # samtools | picard (picard via conda env)
 merge_tool: "samtools"     # samtools | picard (picard via conda env)

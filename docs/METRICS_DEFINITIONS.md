@@ -2,7 +2,7 @@
 
 Definitions used by PIGSTI for **detection** (KrakenUniq / E-value ± HOPS) and **post-mapping authentication**. Each mapped candidate receives a score **out of 10**, or **out of 13** if HOPS is enabled.
 
-These definitions match the PIGSTI software paper (F1000 Research, in preparation).
+These definitions match the PIGSTI software paper (*F1000Research*, in preparation).
 
 ---
 

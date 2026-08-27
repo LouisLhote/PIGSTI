@@ -6,7 +6,7 @@
 |-----------|----------|
 | `config/samples.tsv` (`sample`, `r1`, optional `pcr`/`r2`) | HOPS (`enable_hops`, malt index, resources) |
 | `config/Pathogen_spreadsheet.csv` (`Krakenuniq name`, `Hops name`, `bwa index`) | decOM (`enable_decom`, `decOM_sources`) |
-| `kraken_db`, `host_index` | `pathogen_screening_only`, QC dashboards |
+| `kraken_db`, `host_index` | `pathogen_screening_only`, per-pathogen spreadsheet thresholds |
 | `bwa_indices` + `mtDNA_indices` if `host_aligner: bwa` | Most thresholds under `pathogen_detection_criteria` |
 | `bowtie2_indices` + `bowtie2_mtDNA_indices` if `host_aligner: bowtie2` | `cleanup_intermediates`, thread counts |
 

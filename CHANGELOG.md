@@ -14,7 +14,7 @@ and this project aims to follow [Semantic Versioning](https://semver.org/).
 - Guellil E-value as default detection filter (optional E-score)
 - Always-on edit-distance damage vs no-damage split
 - On-demand pathogen BWA index build before `bwa aln`
-- Optional HOPS (including parallel / mmap MALT), decOM, genetic sexing, Multi-QC dashboard
+- Optional HOPS (including parallel / mmap MALT), decOM, genetic sexing
 - Metro-map and Function+Tool workflow figures
 - Zenodo / GitHub release metadata (`CITATION.cff`, `LICENSE`)
 

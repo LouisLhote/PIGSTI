@@ -323,7 +323,7 @@ input:focus, select:focus {
     <div class="section-icon icon-teal">01</div>
     <div>
       <h2>Config inputs</h2>
-      <div class="desc">Sample sheet and pathogen reference table</div>
+      <div class="desc">Sample sheet and pathogen reference table (one FASTA per row). Build a panel with <code>create_pigsti_pathogen_database.py</code>.</div>
     </div>
     <span class="section-num">INPUTS</span>
   </div>
@@ -334,6 +334,7 @@ input:focus, select:focus {
     </div>
     <div class="field">
       <div class="field-label"><label>Pathogen spreadsheet</label><span class="tag tag-req">required</span></div>
+      <div class="hint">Columns: Krakenuniq name, Hops name, bwa index; optional Guellil_et_al_Evalue_threshold per pathogen</div>
       <input type="text" id="pathogen_spreadsheet" value="config/Pathogen_spreadsheet.csv" class="mono">
     </div>
   </div>
@@ -402,7 +403,20 @@ input:focus, select:focus {
     </label>
   </div>
 
-  <div class="subhead" style="margin-top:22px;">BAM tools</div>
+  <div class="subhead">FastQ Screen (host identification)</div>
+  <div class="field-row">
+    <div class="field">
+      <div class="field-label"><label>Full-dataset rescreen</label></div>
+      <div class="hint">If one-hit-one-genome reads on the subset pass are low, rescreen all collapsed reads</div>
+      <select id="fastq_screen_full_dataset_rescreen"><option value="true" selected>true</option><option value="false">false</option></select>
+    </div>
+    <div class="field">
+      <div class="field-label"><label>Min. one-hit-one-genome (subset)</label></div>
+      <input type="number" id="fastq_screen_full_dataset_min_one_hit" value="50" min="1">
+    </div>
+  </div>
+
+  <div class="subhead">BAM tools</div>
   <div class="field-row">
     <div class="field">
       <div class="field-label"><label>Dedup tool</label></div>
@@ -779,6 +793,8 @@ function generate() {
   y += 'hops_edit_distance_threshold: '+val('hops_edit_distance_threshold')+'\n';
   y += 'hops_damage_threshold: '+val('hops_damage_threshold')+'\n';
   y += 'fastq_screen_conf: "config/fastq_screen.conf"\n';
+  y += 'fastq_screen_full_dataset_rescreen: '+val('fastq_screen_full_dataset_rescreen')+'\n';
+  y += 'fastq_screen_full_dataset_min_one_hit: '+val('fastq_screen_full_dataset_min_one_hit')+'\n';
 
   document.getElementById('yaml-output').value = y;
 }
