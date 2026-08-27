@@ -392,7 +392,7 @@ input:focus, select:focus {
   <div class="mode-pills" id="mapping-mode-pills">
     <label class="mode-pill active">
       <input type="radio" name="pathogen_mapping_mode" value="default" checked>
-      <strong>default</strong>
+      <strong>default (recommended)</strong>
       <span>Bowtie2-unmapped reads</span>
     </label>
     <label class="mode-pill">
@@ -413,7 +413,6 @@ input:focus, select:focus {
       <select id="merge_tool"><option value="samtools" selected>samtools</option><option value="picard">picard</option></select>
     </div>
   </div>
-  <div class="note">Picard and FastQ Screen are always taken from the pipeline conda environments — no custom executable paths needed.</div>
 </div>
 
 <!-- 4. Host references -->
@@ -422,30 +421,28 @@ input:focus, select:focus {
     <div class="section-icon icon-mint">04</div>
     <div>
       <h2>Host references</h2>
-      <div class="desc">Index paths per species — names must match <code>samples.tsv</code></div>
+      <div class="desc">Index paths per species — names must match <code>samples.tsv</code>. Shown fields follow <strong>host aligner</strong>.</div>
     </div>
     <span class="section-num">HOST</span>
   </div>
-  <div class="subhead">BWA indices</div>
-  <div id="bwa-rows"></div>
-  <button class="add-btn" onclick="addSpeciesRow('bwa-rows')">+ Add species</button>
+  <div id="host-bwa-block">
+    <div class="subhead">BWA indices</div>
+    <div id="bwa-rows"></div>
+    <button class="add-btn" onclick="addSpeciesRow('bwa-rows')">+ Add species</button>
 
-  <div class="subhead">mtDNA indices</div>
-  <div id="mtdna-rows"></div>
-  <button class="add-btn" onclick="addSpeciesRow('mtdna-rows')">+ Add species</button>
+    <div class="subhead">mtDNA indices (FASTA for BWA)</div>
+    <div id="mtdna-rows"></div>
+    <button class="add-btn" onclick="addSpeciesRow('mtdna-rows')">+ Add species</button>
+  </div>
 
-  <div style="margin-top:18px;">
-    <div class="collapsible-trigger" onclick="toggleCollapse(this)">
-      <span class="chevron">▶</span> Bowtie2 indices <span class="tag tag-opt">optional</span>
-    </div>
-    <div class="collapsible-body">
-      <div class="hint">Only needed when host or pathogen aligner is bowtie2</div>
-      <div id="bt2-rows"></div>
-      <button class="add-btn" onclick="addSpeciesRow('bt2-rows')">+ Add species</button>
-      <div class="subhead">Bowtie2 mtDNA indices</div>
-      <div id="bt2-mtdna-rows"></div>
-      <button class="add-btn" onclick="addSpeciesRow('bt2-mtdna-rows')">+ Add species</button>
-    </div>
+  <div id="host-bt2-block" style="display:none;">
+    <div class="subhead">Bowtie2 indices</div>
+    <div class="hint">Bowtie2 index prefix per species (not FASTA)</div>
+    <div id="bt2-rows"></div>
+    <button class="add-btn" onclick="addSpeciesRow('bt2-rows')">+ Add species</button>
+    <div class="subhead">Bowtie2 mtDNA indices</div>
+    <div id="bt2-mtdna-rows"></div>
+    <button class="add-btn" onclick="addSpeciesRow('bt2-mtdna-rows')">+ Add species</button>
   </div>
 </div>
 
@@ -553,14 +550,6 @@ input:focus, select:focus {
         <div class="toggle-desc">Skip host / mtDNA mapping and QC</div>
       </label>
       <label class="switch"><input type="checkbox" id="pathogen_screening_only"><span class="slider"></span></label>
-    </div>
-
-    <div class="toggle-item">
-      <label class="toggle-info" for="enable_multi_qc">
-        <div class="toggle-title">Multi-QC dashboard</div>
-        <div class="toggle-desc">Interactive HTML QC report per sample</div>
-      </label>
-      <label class="switch"><input type="checkbox" id="enable_multi_qc"><span class="slider"></span></label>
     </div>
 
     <div class="toggle-item">
@@ -723,14 +712,18 @@ function generate() {
   y += 'dedup_tool: "'+val('dedup_tool')+'"\n';
   y += 'merge_tool: "'+val('merge_tool')+'"\n\n';
 
-  var bwa = getSpeciesMap('bwa-rows');
-  if (Object.keys(bwa).length) y += 'bwa_indices:\n'+yamlMap(bwa,2)+'\n\n';
-  var mt = getSpeciesMap('mtdna-rows');
-  if (Object.keys(mt).length) y += 'mtDNA_indices:\n'+yamlMap(mt,2)+'\n\n';
-  var b2 = getSpeciesMap('bt2-rows');
-  if (Object.keys(b2).length) y += 'bowtie2_indices:\n'+yamlMap(b2,2)+'\n\n';
-  var b2m = getSpeciesMap('bt2-mtdna-rows');
-  if (Object.keys(b2m).length) y += 'bowtie2_mtDNA_indices:\n'+yamlMap(b2m,2)+'\n\n';
+  var hostAligner = val('host_aligner');
+  if (hostAligner === 'bowtie2') {
+    var b2 = getSpeciesMap('bt2-rows');
+    if (Object.keys(b2).length) y += 'bowtie2_indices:\n'+yamlMap(b2,2)+'\n\n';
+    var b2m = getSpeciesMap('bt2-mtdna-rows');
+    if (Object.keys(b2m).length) y += 'bowtie2_mtDNA_indices:\n'+yamlMap(b2m,2)+'\n\n';
+  } else {
+    var bwa = getSpeciesMap('bwa-rows');
+    if (Object.keys(bwa).length) y += 'bwa_indices:\n'+yamlMap(bwa,2)+'\n\n';
+    var mt = getSpeciesMap('mtdna-rows');
+    if (Object.keys(mt).length) y += 'mtDNA_indices:\n'+yamlMap(mt,2)+'\n\n';
+  }
 
   y += '# ── Databases & indices ──────────────────────────────────────\n';
   if (val('kraken_db')) y += 'kraken_db: "'+val('kraken_db')+'"\n';
@@ -758,7 +751,6 @@ function generate() {
   }
   y += 'pathogen_screening_only: '+chk('pathogen_screening_only')+'\n';
   y += 'enable_sexing: '+chk('enable_sexing')+'\n';
-  y += 'enable_multi_qc_dashboard: '+chk('enable_multi_qc')+'\n';
   y += 'cleanup_intermediates: '+chk('cleanup_intermediates')+'\n';
   y += '# edit-distance damage split is always enabled in the pipeline\n';
   y += 'edit_distance_damage_window_size: '+val('edit_distance_damage_window')+'\n\n';
@@ -818,8 +810,14 @@ function syncModePills() {
     p.classList.toggle('active', p.querySelector('input').checked);
   });
 }
+function syncHostIndexPanels() {
+  var useBt2 = val('host_aligner') === 'bowtie2';
+  document.getElementById('host-bwa-block').style.display = useBt2 ? 'none' : '';
+  document.getElementById('host-bt2-block').style.display = useBt2 ? '' : 'none';
+}
 
 document.querySelectorAll('input[type="text"], select').forEach(function(el){ el.addEventListener('input', generate); });
+document.getElementById('host_aligner').addEventListener('change', function(){ syncHostIndexPanels(); generate(); });
 document.querySelectorAll('input[type="checkbox"]').forEach(function(el){
   el.addEventListener('change', function(){
     if (el.id === 'enable_hops') toggleExtra('enable_hops', 'hops-extra');
@@ -842,6 +840,9 @@ document.querySelectorAll('input[name="pathogen_mapping_mode"]').forEach(functio
 
 addSpeciesRow('bwa-rows');
 addSpeciesRow('mtdna-rows');
+addSpeciesRow('bt2-rows');
+addSpeciesRow('bt2-mtdna-rows');
+syncHostIndexPanels();
 syncDetectionFilter();
 generate();
 </script>

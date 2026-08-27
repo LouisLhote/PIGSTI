@@ -6,11 +6,10 @@
 [![Snakemake](https://img.shields.io/badge/snakemake-%E2%89%A57.32-brightgreen.svg)](https://snakemake.github.io)
 [![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org)
 [![Conda](https://img.shields.io/badge/conda%20%2F%20mamba-enabled-green.svg)](https://conda.io)
-[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.XXXXXXX-blue.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
 
-**PIGSTI: a modular, reproducible pipeline for host identification and detection of ancient pathogens and zoonotic microbes in animal palaeogenomic data.**
+**PIGSTI: a modular, reproducible pipeline for detecting species identity, pathogens, and microbes from animal palaeogenomic data.**
 
-A [Snakemake](https://snakemake.github.io) workflow for shotgun libraries from ancient animal remains: host identification, host/mtDNA mapping, metagenomic screening, pathogen mapping, and multi-criteria authentication.
+A [Snakemake](https://snakemake.github.io) workflow for shotgun libraries from ancient animal remains: competitive host identification, host/mtDNA mapping, metagenomic screening, pathogen reference mapping, and multi-criteria authentication.
 
 <p align="center">
   <img src="docs/Fig1_v2.1.png" alt="PIGSTI pipeline overview (Figure 1)" width="100%">
@@ -33,31 +32,28 @@ A [Snakemake](https://snakemake.github.io) workflow for shotgun libraries from a
 - [Pathogen authentication](#pathogen-authentication)
 - [Optional modules](#optional-modules)
 - [Documentation](#documentation)
-- [Troubleshooting](#troubleshooting)
-- [Citation & Zenodo](#citation--zenodo)
 - [License](#license)
 
 ---
 
 ## What does PIGSTI do?
 
-PIGSTI takes raw Illumina FASTQ libraries and produces **authenticated pathogen candidates** plus **host/mtDNA QC**, organised by biological sample.
+PIGSTI (**P**athogen an**I**mal **G**enome **S**equence **T**oolk**I**t) is a bioinformatic pipeline for screening and detecting pathogens in shotgun sequencing data from ancient animal remains. It integrates host species identification, genome mapping, and metagenomic pathogen screening in a single Snakemake run, producing authenticated pathogen candidates plus host/mtDNA quality control, organised by biological sample.
 
 At a high level (see **Figure 1**):
 
-1. **Preprocessing** — trim adapters and quality-filter reads  
-   (**AdapterRemoval** for paired-end with collapse; **cutadapt** for single-end).
-2. **Host route** — identify the best host species (**FastQ Screen**), map nuclear genome and mtDNA (**BWA** or **Bowtie2**), merge PCR replicates (**samtools**), then run soft-clipping, **DamageProfiler**, **Qualimap**, and optional genetic sexing.
-3. **Metagenomics screening** — complexity filter / dedup (**PRINSEQ++**), remove mammalian reads against a chimera index (**Bowtie2**), pool libraries, classify with **KrakenUniq** (optional **MALT/HOPS**, optional **decOM** source tracking).
-4. **Pathogen route** — select candidates with Guellil **E-value** (default) and/or **HOPS**, map to pathogen references, then **authenticate** with a composite score (ANI, entropy, breadth, 5′ C→T damage, edit distance, mapping ratio, genus rank).
+1. **Preprocessing** — adapter trimming and quality filtering (**AdapterRemoval** for paired-end with collapse; **cutadapt** for single-end).
+2. **Host route** — identify the best host species (**FastQ Screen**), map nuclear and mitochondrial genomes (**BWA** or **Bowtie2**), merge PCR replicates per biological sample (**samtools**), then soft-clipping, **DamageProfiler**, **Qualimap**, and optional genetic sexing.
+3. **Metagenomics screening** — complexity filter and deduplication (**PRINSEQ++**), removal of mammalian reads against a chimera index (**Bowtie2**), pooling of libraries, classification with **KrakenUniq** (optional **MALT/HOPS**, optional **decOM** source tracking).
+4. **Pathogen route** — candidate selection with Guellil **E-value** (default) and/or **HOPS**, mapping to pathogen references, then **authentication** with a composite score (ANI, entropy, breadth, 5′ C→T damage, edit distance, mapping ratio, genus rank).
 5. **Reports** — cohort Excel tables, per-pathogen PDFs, and a run provenance manifest.
 
 **Two IDs matter throughout**
 
 | ID | Meaning |
 |----|---------|
-| `pcr` | Sequencing library (one FASTQ pair / SE file) |
-| `sample` | Biological individual — several PCRs can merge here before Kraken, HOPS, and pathogen mapping |
+| `pcr` | Sequencing library (one FASTQ pair / single-end file) |
+| `sample` | Biological individual — several PCR libraries merge here after host mapping and filtering, and again at the sample level for KrakenUniq, HOPS, and pathogen mapping |
 
 ---
 
@@ -70,12 +66,12 @@ At a high level (see **Figure 1**):
 | **Config file** | `config/config.yaml` — easiest via the interactive HTML helper (below) |
 | **Sample sheet** | Tab-separated `config/samples.tsv` (see [Prepare the sample sheet](#prepare-the-sample-sheet)) |
 | **Pathogen table** | `config/Pathogen_spreadsheet.csv` (Kraken names, references, optional thresholds) |
-| **KrakenUniq database** | NCBI NT–style DB used by **aMETA** — download from SciLifeLab: [**doi:10.17044/scilifelab.20205504**](https://doi.org/10.17044/scilifelab.20205504) · set `kraken_db:` to that directory |
+| **KrakenUniq database** | NCBI NT–style DB used by **aMETA** — [doi:10.17044/scilifelab.20205504](https://doi.org/10.17044/scilifelab.20205504) · set `kraken_db:` to that directory |
 | **Chimera / mammal index** | Bowtie2 prefix for host-read depletion (`host_index`) |
-| **Host & mtDNA references** | FASTA (or Bowtie2 prefixes) per species in `bwa_indices` / `mtDNA_indices` |
-| **Pathogen references** | One FASTA (or BWA index) per spreadsheet row (`bwa index` column) |
+| **Host & mtDNA references** | FASTA paths (BWA) or Bowtie2 prefixes per species — depends on `host_aligner` |
+| **Pathogen references** | One FASTA (or index) per spreadsheet row (`bwa index` column); build a panel with `create_pigsti_pathogen_database.py` |
 
-Optional: HOPS MALT index + Resources; decOM sources; Multi-QC dashboard.
+Optional: HOPS MALT index + Resources; decOM sources.
 
 > **KrakenUniq tip:** Point `kraken_db` at the unpacked aMETA NT database root (the folder that contains the KrakenUniq index files). You do not need to rebuild it for a standard PIGSTI run.
 
@@ -109,9 +105,8 @@ Pig01	Pig01_PCR2	/path/to/Pig01_PCR2_R1.fastq.gz	/path/to/Pig01_PCR2_R2.fastq.gz
 Sample02	Sample02_SE	/path/to/Sample02_R1.fastq.gz		LIB03	Run1
 ```
 
-- Same `sample`, different `pcr` → libraries are merged for Kraken / pathogen mapping.  
-- Paths must exist before the run (startup validation checks them).  
-- Do **not** commit a sheet with private paths; keep using the `*.example.*` templates in git.
+- Same `sample`, different `pcr` → libraries are merged at the biological-sample level after host mapping and filtering, and for KrakenUniq / pathogen mapping.
+- Paths must exist before the run (startup validation checks them).
 
 Also prepare the pathogen spreadsheet:
 
@@ -150,7 +145,7 @@ host_index: "/path/to/refs/chimera"            # Bowtie2 prefix
 
 host_aligner: bwa
 pathogen_aligner: bwa
-pathogen_mapping_mode: default                 # or super_careful
+pathogen_mapping_mode: default                 # recommended; or super_careful
 
 bwa_indices:
   Pig: "/path/to/sus_scrofa.fa"
@@ -162,6 +157,8 @@ pathogen_detection_criteria:
   guellil_evalue_threshold: 0.001
   reads_threshold: 50
 ```
+
+When `host_aligner: bowtie2`, use `bowtie2_indices` and `bowtie2_mtDNA_indices` instead of `bwa_indices` / `mtDNA_indices`.
 
 Full key list: [`docs/CONFIG.md`](docs/CONFIG.md).
 
@@ -251,7 +248,6 @@ Candidates that pass E-value (default) and/or HOPS screening are mapped to refer
 | `enable_hops: true` | HOPS (MALT + MaltExtract); union with E-value. Supports `hops_parallel` / `hops_malt_mmap` |
 | `enable_decom: true` | decOM source tracking |
 | `enable_sexing: true` | Residual sexing (Cow, Goat, Sheep, Dog) |
-| `enable_multi_qc_dashboard: true` | Per-sample HTML QC dashboard |
 | `pathogen_screening_only: true` | Skip host/mtDNA mapping |
 | `cleanup_intermediates: true` | Drop large intermediates after finals |
 
@@ -261,54 +257,9 @@ Candidates that pass E-value (default) and/or HOPS screening are mapped to refer
 
 | Document | Contents |
 |----------|----------|
-| [`docs/PIPELINE_OVERVIEW.md`](docs/PIPELINE_OVERVIEW.md) | Workflow steps, optional modules, key config |
 | [`docs/CONFIG.md`](docs/CONFIG.md) | Config keys, HOPS parallel, `results_root` |
 | [`docs/METRICS_DEFINITIONS.md`](docs/METRICS_DEFINITIONS.md) | Authentication metrics (score out of 10 / 13) |
 | [`docs/OUTPUT_SCHEMA.md`](docs/OUTPUT_SCHEMA.md) | Result directory layout |
-| [`docs/RELEASE_AND_ZENODO.md`](docs/RELEASE_AND_ZENODO.md) | GitHub + Zenodo release checklist |
-
----
-
-## Troubleshooting
-
-| Symptom | Action |
-|---------|--------|
-| `fail to locate the index` (BWA) | Pathogen FASTA needs a BWA index — PIGSTI builds it via `bwa_index_pathogen`, or run `bwa index your.fa` once |
-| Validation fails at load | Fix paths in `config/` and the sample sheet |
-| Dry-run almost empty | Outputs already exist — `snakemake -n --forceall` |
-| Conda prefix errors | Remove the broken hash under `.snakemake/conda/` and rerun |
-
-```bash
-python scripts/validate_pigsti_setup.py \
-  --config config/config.yaml \
-  --samples config/samples.tsv \
-  --spreadsheet config/Pathogen_spreadsheet.csv \
-  --output results/workflow/.pigsti_validation_ok
-```
-
----
-
-## Citation & Zenodo
-
-Cite the **software release** (Zenodo DOI once minted) and record the commit from `results/final/run_manifest.json`. Also cite tools you ran (AdapterRemoval, KrakenUniq, etc.) and the aMETA NT database if you use it:
-
-- aMETA KrakenUniq NT DB — [doi:10.17044/scilifelab.20205504](https://doi.org/10.17044/scilifelab.20205504)
-
-```bibtex
-@software{lhote_pigsti,
-  author       = {Lhote, Louis},
-  title        = {{PIGSTI: a modular, reproducible pipeline for host identification and detection of ancient pathogens and zoonotic microbes in animal palaeogenomic data}},
-  year         = {2026},
-  publisher    = {Zenodo},
-  version      = {v1.0.0},
-  doi          = {10.5281/zenodo.XXXXXXX},
-  url          = {https://doi.org/10.5281/zenodo.XXXXXXX}
-}
-```
-
-Release how-to: [`docs/RELEASE_AND_ZENODO.md`](docs/RELEASE_AND_ZENODO.md) · [`CITATION.cff`](CITATION.cff)
-
-> Replace `10.5281/zenodo.XXXXXXX` after the first Zenodo–GitHub linked release.
 
 ---
 

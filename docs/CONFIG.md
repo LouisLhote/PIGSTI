@@ -91,7 +91,7 @@ Pathogen reference FASTAs for **mapping** come from the spreadsheet `bwa index` 
 
 | Key | Default | Notes |
 |-----|---------|--------|
-| `pathogen_mapping_mode` | `super_careful` | `default` = pooled unaligned FASTQs; `super_careful` = per-PCR host-unmapped reads (needs host mapping). |
+| `pathogen_mapping_mode` | `default` *(recommended)* | `default` = pooled unaligned FASTQs; `super_careful` = per-PCR host-unmapped reads (needs host mapping). |
 | `pathogen_aligner` | `bwa` | `bwa` or `bowtie2` for pathogen reference mapping. |
 | `host_aligner` | `bwa` | `bwa` or `bowtie2` for host/mtDNA. |
 | `pathogen_screening_only` | `false` | `true` skips host/mtDNA and forces `pathogen_mapping_mode: default`. |
@@ -140,7 +140,6 @@ Host reference chromosomes must be named so autosomes parse as `1`…`N` and X a
 |-----|----------------------|
 | `enable_hops: true` | `hops_malt_index`, `hops_resources`, HOPS config under `config/` |
 | `enable_decom: true` | `decOM_sources` directory; optional `decom_memory` (default `64GB`), `decom_threads` (default `8`) |
-| `enable_multi_qc_dashboard: true` | Host/mtDNA analysis enabled |
 
 ### HOPS parallel MALT (`hops_parallel: true`)
 
@@ -257,6 +256,5 @@ pathogen_detection_criteria:
 
 ## See also
 
-- [`PIPELINE_OVERVIEW.md`](PIPELINE_OVERVIEW.md) — workflow steps and optional modules  
 - [`OUTPUT_SCHEMA.md`](OUTPUT_SCHEMA.md) — result paths  
 - [`METRICS_DEFINITIONS.md`](METRICS_DEFINITIONS.md) — authentication scoring  

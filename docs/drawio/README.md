@@ -94,12 +94,12 @@ Use this when adding or rearranging boxes so the drawing does not drift from Sna
 
 ### Layout path reminder (single source of truth)
 
-See [`OUTPUT_SCHEMA.md`](../OUTPUT_SCHEMA.md) and [`PIPELINE_OVERVIEW.md`](../PIPELINE_OVERVIEW.md). Key folders: `libraries/`, `pools/`, `host/`, `samples/`, `metagenomics/`, `pathogen/`, `final/`, `workflow/`.
+See [`OUTPUT_SCHEMA.md`](../OUTPUT_SCHEMA.md). Key folders: `libraries/`, `pools/`, `host/`, `samples/`, `metagenomics/`, `pathogen/`, `final/`, `workflow/`.
 
 ---
 
 ## Related docs
 
-- [`PIPELINE_OVERVIEW.md`](../PIPELINE_OVERVIEW.md) — workflow steps and optional flags
 - [`CONFIG.md`](../CONFIG.md) — feature switches and paths
+- [`METRICS_DEFINITIONS.md`](../METRICS_DEFINITIONS.md) — authentication scoring
 - `Snakefile` — definitive rule ordering

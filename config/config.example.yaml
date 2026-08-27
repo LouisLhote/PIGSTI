@@ -71,7 +71,6 @@ enable_decom: false
 
 pathogen_screening_only: false   # true → skip host/mtDNA mapping & QC
 enable_sexing: true              # residual method; Cow, Goat, Sheep, Dog only
-enable_multi_qc_dashboard: false
 cleanup_intermediates: false
 
 # Edit-distance damage split is always on in the pipeline.
