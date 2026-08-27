@@ -23,7 +23,6 @@ TEXT_REPLACEMENTS = [
 GLOBS = [
     "Snakefile",
     "README.md",
-    "PUBLICATION_README.md",
     "config/config.example.yaml",
     "scripts/*.py",
     "scripts/*.R",

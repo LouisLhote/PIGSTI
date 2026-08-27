@@ -16,7 +16,7 @@ and this project aims to follow [Semantic Versioning](https://semver.org/).
 - On-demand pathogen BWA index build before `bwa aln`
 - Optional HOPS (including parallel / mmap MALT), decOM, genetic sexing, Multi-QC dashboard
 - Metro-map and Function+Tool workflow figures
-- Zenodo / GitHub release metadata (`CITATION.cff`, `.zenodo.json`, `LICENSE`)
+- Zenodo / GitHub release metadata (`CITATION.cff`, `LICENSE`)
 
 ### Changed
 - Portable `config/config.example.yaml` (no machine-specific paths)

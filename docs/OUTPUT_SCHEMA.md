@@ -2,7 +2,7 @@
 
 See [`V2_MIGRATION.md`](V2_MIGRATION.md) for older layout mappings.
 
-**Pipeline visuals:** [`pipeline_overview.html`](pipeline_overview.html) (diagrams + Snakemake DAG), [`PIPELINE_DESIGN.md`](PIPELINE_DESIGN.md), optional `docs/images/snakemake_dag.svg`.
+**Pipeline visuals:** [`PIPELINE_OVERVIEW.md`](PIPELINE_OVERVIEW.md), [`pipeline_overview.html`](pipeline_overview.html), optional `docs/images/snakemake_dag.svg`.
 
 ## Tree overview
 

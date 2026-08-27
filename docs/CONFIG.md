@@ -257,6 +257,6 @@ pathogen_detection_criteria:
 
 ## See also
 
-- [`PIPELINE_DESIGN.md`](PIPELINE_DESIGN.md) — workflow figure and routes  
-- [`CHECKPOINT_PATHOGEN_MAPPING.md`](CHECKPOINT_PATHOGEN_MAPPING.md) — when pathogen mapping activates  
+- [`PIPELINE_OVERVIEW.md`](PIPELINE_OVERVIEW.md) — workflow steps and optional modules  
 - [`OUTPUT_SCHEMA.md`](OUTPUT_SCHEMA.md) — result paths  
+- [`METRICS_DEFINITIONS.md`](METRICS_DEFINITIONS.md) — authentication scoring  

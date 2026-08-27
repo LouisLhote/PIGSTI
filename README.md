@@ -261,8 +261,10 @@ Candidates that pass E-value (default) and/or HOPS screening are mapped to refer
 
 | Document | Contents |
 |----------|----------|
+| [`docs/PIPELINE_OVERVIEW.md`](docs/PIPELINE_OVERVIEW.md) | Workflow steps, optional modules, key config |
 | [`docs/CONFIG.md`](docs/CONFIG.md) | Config keys, HOPS parallel, `results_root` |
 | [`docs/METRICS_DEFINITIONS.md`](docs/METRICS_DEFINITIONS.md) | Authentication metrics (score out of 10 / 13) |
+| [`docs/OUTPUT_SCHEMA.md`](docs/OUTPUT_SCHEMA.md) | Result directory layout |
 | [`docs/RELEASE_AND_ZENODO.md`](docs/RELEASE_AND_ZENODO.md) | GitHub + Zenodo release checklist |
 
 ---

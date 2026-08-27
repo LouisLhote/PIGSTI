@@ -7,7 +7,7 @@ Checklist for publishing **PIGSTI** on GitHub and archiving a citable version on
 - [ ] No machine paths in tracked files (`/raid_md0/…`, home directories, passwords).
 - [ ] `config/config.yaml`, `config/samples.tsv`, and `config/Pathogen_spreadsheet.csv` are **gitignored** (local only).
 - [ ] Templates exist and use placeholders: `config.example.yaml`, `samples.example.tsv`, `Pathogen_spreadsheet.example.csv`.
-- [ ] `LICENSE` is MIT and matches `CITATION.cff` / `.zenodo.json`.
+- [ ] `LICENSE` is MIT and matches `CITATION.cff`.
 - [ ] `CHANGELOG.md` has an entry for this version.
 - [ ] Dry-run succeeds on a clean clone with example configs filled for a tiny test set.
 
@@ -24,7 +24,7 @@ snakemake -n -p --use-conda --cores 4
 1. Push the publication branch to `https://github.com/LouisLhote/PIGSTI` (or your fork).
 2. Set repository description: *Ancient DNA pathogen screening with Snakemake — host/mtDNA, KrakenUniq, authentication, cohort reports.*
 3. Topics: `ancient-dna`, `snakemake`, `metagenomics`, `pathogen`, `krakenuniq`, `bioinformatics`.
-4. Enable Issues; link `CONTRIBUTING.md`.
+4. Enable Issues for bug reports and questions.
 5. Confirm README figures render (`docs/images/*.png`).
 
 ## 2. Create a GitHub Release (triggers Zenodo DOI if linked)
@@ -59,9 +59,7 @@ identifiers:
     value: 10.5281/zenodo.XXXXXXX
 ```
 
-and update `.zenodo.json` / README citation block.
-
-`.zenodo.json` in the repo root supplies default metadata (title, creators, license, keywords) for the deposit.
+and update the README citation block.
 
 ## 4. What users should cite
 

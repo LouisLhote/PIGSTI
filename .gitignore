@@ -17,8 +17,10 @@ config/config_hops2.0.txt
 # ===== Run outputs & caches =====
 results/
 results_by_type/
+final/
 logs/
 .snakemake/
+*.snakemake.log
 .pigsti/
 ncbi_taxdump/
 lists/

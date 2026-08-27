@@ -47,65 +47,16 @@ The **Host identification** box has a sticky note placeholder (`🐄 🐷 🐑 �
 
 ---
 
-## Legacy diagram (repo root)
-
-**[→ `PIGSTI.drawio.html`](../../PIGSTI.drawio.html)** (repo root, next to `Snakefile`)
-
-Curated, automation-friendly views live under `docs/` (see below). When the Snakemake workflow changes, update **either** the Draw.io file **or** the Python/Mermaid sources—ideally both so they stay in sync.
-
-A nicer browser wrapper for the same file is available at **[`PIGSTI.drawio.nice.html`](../../PIGSTI.drawio.nice.html)**.
-
----
-
-## How to open and edit
-
-### Option A — Website (no install)
-
-1. Open [https://app.diagrams.net/](https://app.diagrams.net/)
-2. **File → Open from… → Device** (or drag the file into the tab)
-3. Select `PIGSTI_publication/PIGSTI.drawio.html` from disk
-
-### Option B — Desktop app
-
-Install **diagrams.net** desktop, then **File → Open** the same path.
-
-### Option C — VS Code
-
-Install the **“Draw.io Integration”** extension, then open `PIGSTI.drawio.html` in the editor.
-
-### Why is the file so large?
-
-Exports as **`.html`** embed the whole diagram (and sometimes theme data) in one file, so diffs are noisy. Prefer **File → Save as → `.drawio`** for day-to-day edits if you want cleaner Git history; you can still export to HTML occasionally for sharing. (If you add a canonical `.drawio` file, document its path in this section.)
-
----
-
-## After editing
-
-1. Save the diagram (same name/path, or export a new `.html` and replace `PIGSTI.drawio.html` at repo root).
-2. Check the **checklist** below against the current `Snakefile` / `docs/PIPELINE_DESIGN.md`.
-3. Regenerate static assets so PNG/SVG/Mermaid match the code:
-
-   ```bash
-   python scripts/render_workflow_diagram.py
-   ```
-
-4. Optional: refresh the rule-level graph (needs Graphviz):
-
-   ```bash
-   bash scripts/render_snakemake_dag.sh
-   ```
-
----
-
 ## Curated views (use these in papers / README)
 
 | Asset | Role |
 |-------|------|
-| [`docs/pipeline_overview.html`](../pipeline_overview.html) | Single page: branded layout, embedded SVG, interactive Mermaid, Snakemake DAG how-to |
+| [`docs/pipeline_overview.html`](../pipeline_overview.html) | Single page: branded layout, embedded SVG, interactive Mermaid |
 | [`docs/images/pipeline_workflow.svg`](../images/pipeline_workflow.svg) | Publication-style schematic (matplotlib) |
 | [`docs/images/pipeline_workflow.png`](../images/pipeline_workflow.png) | Raster version of the same |
 | [`docs/images/pipeline_workflow.mmd`](../images/pipeline_workflow.mmd) | Mermaid source for GitHub/GitLab render |
-| [`docs/images/pipeline_workflow.html`](../images/pipeline_workflow.html) | Legacy small Mermaid panels (points to overview) |
+
+Editable sources: `pigsti_workflow.drawio` and `pigsti_subway_*.drawio` in this folder.
 
 ---
 
@@ -143,12 +94,12 @@ Use this when adding or rearranging boxes so the drawing does not drift from Sna
 
 ### Layout path reminder (single source of truth)
 
-See [`OUTPUT_SCHEMA.md`](../OUTPUT_SCHEMA.md) and PIPELINE_DESIGN “Results tree”. Key folders: `libraries/`, `pools/`, `host/`, `samples/`, `metagenomics/`, `pathogen/`, `final/`, `workflow/`.
+See [`OUTPUT_SCHEMA.md`](../OUTPUT_SCHEMA.md) and [`PIPELINE_OVERVIEW.md`](../PIPELINE_OVERVIEW.md). Key folders: `libraries/`, `pools/`, `host/`, `samples/`, `metagenomics/`, `pathogen/`, `final/`, `workflow/`.
 
 ---
 
 ## Related docs
 
-- [`PIPELINE_DESIGN.md`](../PIPELINE_DESIGN.md) — textual flow and optional flags
+- [`PIPELINE_OVERVIEW.md`](../PIPELINE_OVERVIEW.md) — workflow steps and optional flags
 - [`CONFIG.md`](../CONFIG.md) — feature switches and paths
 - `Snakefile` — definitive rule ordering
