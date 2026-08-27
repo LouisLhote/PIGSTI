@@ -1,9 +1,13 @@
 name: qc
 channels:
-  - conda-forge
+  - conda-forge  # Put conda-forge first
   - bioconda
+  - defaults
 dependencies:
-  - python=3.10
+  - python=3.9
   - numpy
+  - pandas
   - matplotlib
-  - pysam=0.22.1
+  - scipy
+  - libdeflate>=1.22  # Add this line!
+  - pysam>=0.23

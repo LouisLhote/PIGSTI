@@ -3,6 +3,9 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
+  # bioconductor-genomeinfodbdata post-link script calls yq, which requires jq on PATH
+  - jq
+  - yq
   - python=3.10
   - qualimap
   - samtools=1.21

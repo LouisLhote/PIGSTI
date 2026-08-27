@@ -1,0 +1,46 @@
+# ===== Local / secret configuration (never publish) =====
+config/config.yaml
+config/samples.tsv
+config/Pathogen_spreadsheet.csv
+config/fastq_screen.conf
+config/config_hops_custom.txt
+config/config_hops2.0.txt
+
+# Keep portable templates
+!config/config.example.yaml
+!config/samples.example.tsv
+!config/Pathogen_spreadsheet.example.csv
+!config/pathogen_detection_criteria.yaml
+!config/pigsti_config_generator.html
+!config/user_profile_form.html
+
+# ===== Run outputs & caches =====
+results/
+results_by_type/
+logs/
+.snakemake/
+.pigsti/
+ncbi_taxdump/
+lists/
+*.lock
+~$*.xlsx
+.~lock.*
+
+# ===== Python / R / editors =====
+__pycache__/
+*.py[cod]
+*$py.class
+.Rhistory
+.RData
+.Rproj.user/
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ===== Env / secrets =====
+.env
+.env.*
+*.pem
+credentials*.json

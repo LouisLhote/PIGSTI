@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PIGSTI workflow — legacy panels</title>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "base",
+      themeVariables: {
+        fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif",
+        primaryColor: "#ffffff",
+        primaryTextColor: "#21325B",
+        primaryBorderColor: "#24B498",
+        lineColor: "#6B7280",
+        clusterBkg: "#F6F7F8",
+        clusterBorder: "#21325B",
+      },
+      flowchart: { curve: "basis", padding: 18, htmlLabels: true },
+    });
+  </script>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; background: #f8fafc; color: #1e293b; }
+    .banner {
+      background: #21325b; color: #fff; padding: 1rem 1.25rem;
+      border-bottom: 4px solid #24b498;
+    }
+    .banner a { color: #a7f3d0; }
+    main { padding: 1.25rem; max-width: 900px; margin: 0 auto; }
+    .panel { background: #fff; border-radius: 8px; border: 1px solid #e2e8f0; padding: 1rem; margin-bottom: 1rem; }
+    .panel h2 { margin: 0 0 0.5rem; font-size: 1rem; color: #21325b; }
+    .note { font-size: 0.85rem; color: #64748b; margin: 0; }
+    code { background: #e2e8f0; padding: 0.1em 0.35em; border-radius: 4px; font-size: 0.85em; }
+    .mermaid { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    <strong>New:</strong> use <a href="../pipeline_overview.html">pipeline_overview.html</a> for the full diagram, Snakemake DAG instructions, and Draw.io notes.
+    This page keeps small step-by‑panel Mermaid snippets only.
+  </div>
+  <main>
+    <p class="note">Regenerate static figures: <code>python scripts/render_workflow_diagram.py</code></p>
+    <div class="panel">
+      <h2>1 — Spine (trim → FastQ Screen; PRINSEQ++ parallel)</h2>
+      <pre class="mermaid">
+flowchart LR
+  RAW([/"<b>Raw FASTQ</b><br/><sub>samples.tsv</sub>"/])
+  ADAPT["<b>Trimming</b><br/><sub>AdapterRemoval · cutadapt</sub>"]
+  FQS["<b>Screen</b><br/><sub>FastQ Screen</sub>"]
+  PR["<b>Dedup & filter</b><br/><sub>PRINSEQ++</sub>"]
+  RAW --> ADAPT --> FQS
+  ADAPT --> PR
+  classDef input fill:#21325B,stroke:#21325B,color:#fff
+  classDef proc fill:#fff,stroke:#24B498,stroke-width:2px,color:#21325B
+  class RAW input
+  class ADAPT,PR,FQS proc
+      </pre>
+    </div>
+    <div class="panel">
+      <h2>2 — Fork (host from collapsed + FQS; metagenomics from PRINSEQ-passed)</h2>
+      <pre class="mermaid">
+flowchart TB
+  FQS["FastQ Screen · collapsed"]
+  PR["PRINSEQ++ passed"]
+  HM["Host mapping"]
+  MT["mtDNA mapping"]
+  CH["Bowtie2 unaligned"]
+  FQS --> HM
+  FQS --> MT
+  PR --> CH
+  classDef p fill:#fff,stroke:#24B498,stroke-width:2px
+  class FQS,PR,HM,MT,CH p
+      </pre>
+    </div>
+    <div class="panel">
+      <h2>3 — Merge & cohort</h2>
+      <pre class="mermaid">
+flowchart LR
+  MU{{Merge unaligned FASTQs}}
+  KR[KrakenUniq]
+  CK{{Checkpoint targets}}
+  PM[Pathogen mapping]
+  PQ[QC & reports]
+  MU --> KR --> CK --> PM --> PQ
+  classDef c fill:#F6F7F8,stroke:#475569,stroke-width:2px
+  class MU,CK c
+      </pre>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,15 @@
+name: pigsti-host-mapping
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - bwa
+  - bowtie2
+  - samtools
+  - htslib
+  - libdeflate
+  - ncurses
+
+

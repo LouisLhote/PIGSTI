@@ -20,12 +20,12 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import os
 import glob
+import sys
 from pathlib import Path
 import re
 
-def safe_name(name):
-    """Convert pathogen name to safe filename format"""
-    return name.replace(" ", "_").replace("/", "_")
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pigsti_naming import safe_pathogen_name as safe_name
 
 def normalize_name(name: str) -> str:
     """Normalize pathogen names across tools for robust matching.
@@ -203,12 +203,14 @@ def parse_damageprofiler_rates(damage_dir: str):
 
 def get_sample_ref_pairs(samples, spreadsheet_df):
     """Get sample-pathogen pairs from escore results"""
-    pairs = []
+    # Use a set to avoid duplicate (sample, pathogen) pairs,
+    # which break pandas pivot().
+    pairs = set()
     # Precompute normalized spreadsheet Krakenuniq names for membership checks
     spreadsheet_df = spreadsheet_df.copy()
     spreadsheet_df["_krakenuniq_norm"] = spreadsheet_df["Krakenuniq name"].apply(normalize_name)
     for sample in samples:
-        escore_path = f"results/{sample}/Escore/pathogen/{sample}_pathogen.csv"
+        escore_path = f"results/pathogen/{sample}/evalue/pathogen/{sample}_pathogen.csv"
         if os.path.exists(escore_path):
             escore_df = pd.read_csv(escore_path)
             escore_df["taxonomy"] = escore_df["taxonomy"].astype(str).str.strip()
@@ -222,8 +224,9 @@ def get_sample_ref_pairs(samples, spreadsheet_df):
                     canonical = spreadsheet_df.loc[
                         spreadsheet_df["_krakenuniq_norm"] == row["_tax_norm"], "Krakenuniq name"
                     ].iloc[0]
-                    pairs.append((sample, canonical))
-    return pairs
+                    pairs.add((sample, canonical))
+    # Return a stable ordering for reproducibility
+    return sorted(pairs, key=lambda x: (x[0], x[1]))
 
 def calculate_detection_score(sample, pathogen, escore_data, hops_data, bwa_data, 
                             damage_data, breadth_data, entropy_data, comparison_data):
@@ -235,7 +238,7 @@ def calculate_detection_score(sample, pathogen, escore_data, hops_data, bwa_data
     detailed_scores = {}
     
     # 0. E-Score threshold passed (base criterion)
-    escore_file = f"results/{sample}/Escore/pathogen/{sample}_pathogen.csv"
+    escore_file = f"results/pathogen/{sample}/evalue/pathogen/{sample}_pathogen.csv"
     if os.path.exists(escore_file):
         escore_df = pd.read_csv(escore_file)
         # Strip leading spaces from taxonomy column
@@ -274,7 +277,7 @@ def calculate_detection_score(sample, pathogen, escore_data, hops_data, bwa_data
         detailed_scores['hops_damage'] = 0
     
     # 4. ANI > 0.965
-    ani_file = f"results/{sample}/bwa_pathogen/{sample}_{safe_name(pathogen)}.ani.txt"
+    ani_file = f"results/pathogen/{sample}/pathogen_mapping/{sample}_{safe_name(pathogen)}.ani.txt"
     if os.path.exists(ani_file):
         try:
             ani_content = open(ani_file).read().strip()
@@ -294,7 +297,7 @@ def calculate_detection_score(sample, pathogen, escore_data, hops_data, bwa_data
         detailed_scores['ani_threshold'] = 0
     
     # 5. 5′ C>T and 3′ G>A deamination (ancient DNA signals)
-    damage_dir = f"results/{sample}/bwa_pathogen/damageprofiler_{safe_name(pathogen)}"
+    damage_dir = f"results/pathogen/{sample}/pathogen_mapping/damageprofiler_{safe_name(pathogen)}"
     c_to_t_rate, g_to_a_rate = parse_damageprofiler_rates(damage_dir)
     # Thresholds
     c_to_t_threshold = 0.01
@@ -311,7 +314,7 @@ def calculate_detection_score(sample, pathogen, escore_data, hops_data, bwa_data
         detailed_scores['g_to_a_deamination'] = 0
     
     # 7. Breadth ratio ≥ 0.8
-    breadth_file = f"results/{sample}/bwa_pathogen/{sample}_{safe_name(pathogen)}.breadth_ratio.txt"
+    breadth_file = f"results/pathogen/{sample}/pathogen_mapping/{sample}_{safe_name(pathogen)}.breadth_ratio.txt"
     if os.path.exists(breadth_file):
         try:
             breadth_ratio = float(open(breadth_file).read().strip())
@@ -328,9 +331,9 @@ def calculate_detection_score(sample, pathogen, escore_data, hops_data, bwa_data
     # 8. Entropy ≥ 0.9
     # Try multiple candidate entropy files
     entropy_candidates = [
-        f"results/{sample}/bwa_pathogen/{sample}_{safe_name(pathogen)}.mean_entropy.txt",
-        f"results/{sample}/bwa_pathogen/{sample}_{safe_name(pathogen)}.entropy_mean.txt",
-        f"results/{sample}/bwa_pathogen/{sample}_{safe_name(pathogen)}.entropy.txt",
+        f"results/pathogen/{sample}/pathogen_mapping/{sample}_{safe_name(pathogen)}.mean_entropy.txt",
+        f"results/pathogen/{sample}/pathogen_mapping/{sample}_{safe_name(pathogen)}.entropy_mean.txt",
+        f"results/pathogen/{sample}/pathogen_mapping/{sample}_{safe_name(pathogen)}.entropy.txt",
     ]
     entropy, used_entropy = try_read_float_file(entropy_candidates)
     # Slightly relaxed threshold to 0.7 to avoid over-stringency on shallow data
@@ -355,7 +358,7 @@ def main():
     
     # Load SAMPLES from the Snakefile (you might need to adjust this)
     # For now, let's get samples from the escore files
-    sample_dirs = glob.glob("results/*/Escore/pathogen/*_pathogen.csv")
+    sample_dirs = glob.glob("results/*/evalue/pathogen/*_pathogen.csv")
     SAMPLES = [os.path.basename(f).replace("_pathogen.csv", "") for f in sample_dirs]
     
     # Load hops data
@@ -416,7 +419,14 @@ def main():
     # Create matrices
     if all_scores:
         scores_df = pd.DataFrame(all_scores)
-        matrix = scores_df.pivot(index='sample', columns='pathogen', values='total_score')
+        # Be robust to any remaining duplicates by aggregating.
+        # (Pivot fails when duplicates exist.)
+        matrix = scores_df.pivot_table(
+            index="sample",
+            columns="pathogen",
+            values="total_score",
+            aggfunc="max",
+        )
         
         # Save results
         matrix.to_csv(snakemake.output.scores_matrix)

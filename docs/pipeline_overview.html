@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PIGSTI — Pipeline overview</title>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "base",
+      themeVariables: {
+        fontFamily: "system-ui, Segoe UI, Helvetica Neue, Arial, sans-serif",
+        primaryColor: "#ffffff",
+        primaryTextColor: "#1e293b",
+        primaryBorderColor: "#24B498",
+        lineColor: "#64748b",
+        clusterBkg: "#f1f5f9",
+        clusterBorder: "#0f172a",
+      },
+      flowchart: { curve: "basis", padding: 20, htmlLabels: true },
+    });
+  </script>
+  <style>
+    :root {
+      --ink: #0f172a;
+      --muted: #64748b;
+      --brand: #24b498;
+      --brand-dark: #21325b;
+      --surface: #f8fafc;
+      --card: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(180deg, #e2e8f0 0%, var(--surface) 22rem);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    .hero {
+      background: linear-gradient(135deg, var(--brand-dark) 0%, #1e3a5f 50%, #0f172a 100%);
+      color: #fff;
+      padding: 2.5rem 1.5rem 3rem;
+      border-bottom: 5px solid var(--brand);
+    }
+    .hero-inner { max-width: 980px; margin: 0 auto; }
+    .hero h1 { margin: 0 0 0.5rem; font-size: 1.85rem; font-weight: 700; letter-spacing: -0.02em; }
+    .hero p { margin: 0; max-width: 52ch; opacity: 0.92; font-size: 1rem; }
+    .hero .links { margin-top: 1.25rem; display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; }
+    .hero a {
+      color: #a7f3d0;
+      text-decoration: none;
+      font-size: 0.9rem;
+      border-bottom: 1px solid rgba(167,243,208,0.4);
+    }
+    .hero a:hover { border-bottom-color: #fff; color: #fff; }
+    main { max-width: 980px; margin: -2rem auto 3rem; padding: 0 1rem; position: relative; z-index: 1; }
+    .panel {
+      background: var(--card);
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+      padding: 1.25rem 1.5rem 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .panel h2 {
+      margin: 0 0 0.5rem;
+      font-size: 1.05rem;
+      color: var(--brand-dark);
+      border-left: 4px solid var(--brand);
+      padding-left: 0.65rem;
+    }
+    .panel p, .panel li { color: var(--muted); font-size: 0.92rem; }
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.65rem;
+      margin-top: 0.75rem;
+    }
+    .legend span {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.82rem;
+      color: var(--ink);
+    }
+    .legend i {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    .legend .l-proc { background: #fff; border: 2px solid var(--brand); }
+    .legend .l-opt { background: #f8fafc; border: 2px dashed #94a3b8; }
+    .legend .l-ckpt { background: #fffbeb; border: 2px solid #d97706; }
+    .figure {
+      margin: 0.75rem 0 0;
+      padding: 0.75rem;
+      background: #f8fafc;
+      border-radius: 8px;
+      overflow: auto;
+    }
+    .figure svg, .figure img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+    code {
+      font-size: 0.84rem;
+      background: #eef2f6;
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+    }
+    pre.cmd {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.8rem;
+      margin: 0.75rem 0 0;
+    }
+    .mermaid { overflow-x: auto; min-height: 120px; }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <h1>PIGSTI pipeline overview</h1>
+      <p>
+        Publication Snakemake workflow: trimming → FastQ Screen → host/mtDNA (collapsed); PRINSEQ++ → metagenomics/pathogen in parallel.
+        Labels follow an nf-core style (function + tool).
+      </p>
+      <div class="links">
+        <a href="PIPELINE_DESIGN.md">PIPELINE_DESIGN.md</a>
+        <a href="CONFIG.md">CONFIG.md</a>
+        <a href="../PIGSTI.drawio.html">Editable diagram (draw.io export)</a>
+        <a href="drawio/README.md">Draw.io maintainer guide</a>
+      </div>
+    </div>
+  </header>
+  <main>
+    <section class="panel">
+      <h2>Static figure (matplotlib)</h2>
+      <p>Regenerate with <code>python scripts/render_workflow_diagram.py</code> → PNG/SVG/Mermaid (<code>docs/images/</code>).</p>
+      <div class="figure">
+        <img src="images/pipeline_workflow.svg" alt="PIGSTI nf-core-style workflow diagram" width="920" />
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Interactive flow (full graph)</h2>
+      <p>Dashed arrows: optional branches (damage screen, genetic sexing, decOM, HOPS). Solid: default path.</p>
+      <div class="legend">
+        <span><i class="l-proc"></i> Required / default step</span>
+        <span><i class="l-opt"></i> Optional · config-flag</span>
+        <span><i class="l-ckpt"></i> Join / checkpoint</span>
+      </div>
+      <!-- Mermaid source is duplicated from docs/images/pipeline_workflow.mmd (omit %%init; theme set in JS). -->
+      <pre class="mermaid">
+flowchart TB
+  subgraph SPINE[" "]
+    direction LR
+    RAW([/"<b>Raw sequencing data</b><br/><sub>FASTQ · samples.tsv</sub>"/])
+    ADAPT["<b>Adapter & quality trimming</b><br/><sub>AdapterRemoval · cutadapt</sub>"]
+    FQS["<b>Host & contaminant screen</b><br/><sub>FastQ Screen · collapsed</sub>"]
+    PR["<b>Filter & dedup</b><br/><sub>PRINSEQ++</sub>"]
+    RAW --> ADAPT --> FQS
+    ADAPT --> PR
+  end
+  subgraph HOST["Host & mtDNA"]
+    direction LR
+    HM["<b>Host genome mapping</b><br/><sub>BWA / Bowtie2 · collapsed</sub>"]
+    DP["<b>DamageProfiler</b><br/><sub>per PCR BAM</sub>"]
+    MT["<b>Mitochondrial mapping</b><br/><sub>BWA / Bowtie2</sub>"]
+    MH{{"<b>Merge host</b><br/><sub>samtools · results/host/</sub>"}}
+    SX["<b>Genetic sexing</b><br/><sub>R residual · Cow/Goat/Sheep/Dog (opt)</sub>"]
+    MM{{"<b>Merge mtDNA</b><br/><sub>samtools</sub>"}}
+    QH["<b>Merged host QC</b><br/><sub>Qualimap · samples/</sub>"]
+    QM["<b>Merged mtDNA QC</b><br/><sub>Qualimap · samples/</sub>"]
+    HM --> MH --> QH
+    HM -.-> DP
+    MH -.-> SX
+    MT --> MM --> QM
+  end
+  subgraph PATH["Pathogen & metagenomics"]
+    direction LR
+    CH["<b>Unaligned reads</b><br/><sub>Bowtie2 · samtools · PRINSEQ-passed</sub>"]
+    MU{{"<b>Merge FASTQs</b><br/><sub>cat · pigz · pools/</sub>"}}
+    KR["<b>Classification</b><br/><sub>KrakenUniq</sub>"]
+    DC["<b>decOM</b><br/><sub>(config)</sub>"]
+    HO["<b>HOPS</b><br/><sub>(config)</sub>"]
+    EV["<b>Kraken E-value scoring</b><br/><sub>dExp_Escore · evalue/</sub>"]
+    CK{{"<b>Checkpoint</b><br/><sub>pathogen_targets</sub>"}}
+    PM["<b>Reference mapping</b><br/><sub>BWA / Bowtie2</sub>"]
+    PQ["<b>Mapping QC</b><br/><sub>ANI · DamageProfiler · Qualimap</sub>"]
+    CH --> MU --> KR
+    MU -.-> DC
+    KR -.-> HO
+    KR --> EV --> CK --> PM --> PQ
+    HO -.-> CK
+  end
+  FIN([/"<b>Cohort deliverables</b><br/><sub>final/ · manifests · catalogs</sub>"/])
+  FQS --> HM
+  FQS --> MT
+  PR --> CH
+  QH --> FIN
+  QM --> FIN
+  PQ --> FIN
+  classDef input fill:#21325B,stroke:#21325B,color:#fff
+  classDef process fill:#fff,stroke:#24B498,stroke-width:2px,color:#21325B
+  classDef optional fill:#F8FAFC,stroke:#94A3B8,stroke-width:2px,stroke-dasharray:5 3,color:#21325B
+  classDef custom fill:#F6F7F8,stroke:#475569,stroke-width:2px,color:#21325B
+  classDef checkpoint fill:#FFFBF0,stroke:#D97706,stroke-width:2px,color:#21325B
+  classDef output fill:#24B498,stroke:#1A8A74,color:#fff
+  class RAW input
+  class ADAPT,FQS,PR,HM,MT,DP,QH,QM,CH,KR,EV,PM,PQ process
+  class MH,MM,MU,CK custom
+  class DC,HO,SX optional
+  class FIN output
+      </pre>
+    </section>
+
+    <section class="panel">
+      <h2>Snakemake rule graph (<code>--dag</code>)</h2>
+      <p>Requires <strong>Graphviz</strong> (<code>dot</code>) on PATH. Outputs <code>docs/images/snakemake_dag.svg</code> (many nodes at full cohort scale).</p>
+      <pre class="cmd">bash scripts/render_snakemake_dag.sh</pre>
+      <p>Or manually (from repo root, after validation can build the DAG):</p>
+      <pre class="cmd">snakemake --snakefile Snakefile --configfile config/config.yaml --dag \
+  --use-conda --conda-prefix .snakemake/conda \
+  | dot -Tsvg -o docs/images/snakemake_dag.svg</pre>
+      <div class="figure">
+        <img src="images/snakemake_dag.svg" alt="Snakemake DAG — run scripts/render_snakemake_dag.sh to generate"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+        <p id="dag-placeholder" style="display:none;text-align:center;color:#64748b;font-size:0.9rem;">
+          DAG not generated yet. Run <code>bash scripts/render_snakemake_dag.sh</code> → <code>docs/images/snakemake_dag.svg</code>
+        </p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Extras not shown on every edge</h2>
+      <ul style="margin:0.25rem 0 0;padding-left:1.1rem;">
+        <li><strong>PCR vs bio sample</strong> — merges and Kraken use biological <code>sample</code>; most mapping is per PCR under <code>results/libraries/</code>.</li>
+        <li><strong>Index build</strong> — <code>check_and_build_indices</code> for pathogen/host/mt refs before mapping.</li>
+        <li><strong>Checkpoint</strong> — pathogen targets from cohort checkpoint; rules expand from <code>pathogen_targets.txt</code>.</li>
+        <li><strong>Optional modes</strong> — <code>pathogen_screening_only</code>, <code>pathogen_mapping_mode</code>, <code>results_root</code>, see CONFIG.</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

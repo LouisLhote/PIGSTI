@@ -1,0 +1,81 @@
+%%metro title: PIGSTI
+%%metro style: light
+%%metro file: fastq_in | FASTQ
+%%metro file: deliverables | Reports
+%%metro line: shared | Preprocessing | #3B4256
+%%metro line: host | Host route | #5F6A7A
+%%metro line: meta | Metagenomics screening | #B395BD
+%%metro line: detect | Pathogen detection | #C17E70
+%%metro line: path | Pathogen mapping | #8B4A3B
+%%metro line: auth | Authentication | #5C2E2A
+%%metro line: opt | Optional | #9AA3B2 | dashed
+%%metro legend: br
+
+graph LR
+ subgraph preprocessing [Preprocessing]
+ %%metro exit: right | shared, host, meta
+ fastq_in[ ]
+ trim[Trim adapters\nAdapterRemoval]
+
+ fastq_in -->|shared,host,meta| trim
+ end
+
+ subgraph host_route [Host route]
+ %%metro entry: left | host
+ host_id[Host identification\nFastQ Screen]
+ hmap[Map host\nBWA / Bowtie2]
+ mtdna[Map mtDNA\nBWA / Bowtie2]
+ hmerge[Merge samples\nsamtools]
+ hdmg[Damage\nDamageProfiler]
+ softclip[Soft clipping\nPython]
+ hqual[Mapping QC\nQualimap]
+ endog[Endogenous DNA\nhost fraction]
+ sexing[Genetic sexing\nsexing_residual]
+
+ trim -->|host| host_id
+ host_id -->|host| hmap
+ host_id -->|host| mtdna
+ hmap -->|host| hmerge
+ mtdna -->|host| hmerge
+ hmerge -->|host| hdmg
+ hdmg -->|host| softclip
+ softclip -->|host| hqual
+ hmerge -->|host| endog
+ hqual -->|opt| sexing
+ end
+
+ subgraph metagenomics_screening [Metagenomics screening]
+ %%metro entry: left | meta, opt
+ %%metro exit: right | meta, detect, opt
+ prinseq[Dedup\nPRINSEQ++]
+ unaligned[Mammals reads removal\nBowtie2]
+ pool[Pool samples\ncat · pigz]
+ kraken[Metagenome screening\nKrakenUniq]
+ malt[Metagenome screening\nMALT]
+ decom[Source tracking\ndecOM]
+
+ trim -->|meta| prinseq
+ prinseq -->|meta| unaligned
+ unaligned -->|meta| pool
+ pool -->|meta| kraken
+ pool -->|opt| malt
+ kraken -->|opt| decom
+ end
+
+ subgraph pathogen_route [Pathogen route]
+ %%metro direction: LR
+ %%metro entry: left | detect, opt
+ %%metro exit: right | auth, host
+ detect[Pathogen detection\nE-value · MaltExtract]
+ pmap[Pathogen mapping\nBWA / Bowtie2]
+ auth[Authentication\ncomposite score]
+ deliverables[ ]
+
+ kraken -->|detect| detect
+ malt -->|opt| detect
+ detect -->|path| pmap
+ pmap -->|auth| auth
+ auth -->|auth| deliverables
+ hqual -->|host| deliverables
+ endog -->|host| deliverables
+ end

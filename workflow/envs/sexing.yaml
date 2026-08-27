@@ -1,0 +1,8 @@
+name: sexing
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python >=3.10
+  - samtools
+  - r-base=4.3.*

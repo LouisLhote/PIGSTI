@@ -1,0 +1,92 @@
+# PIGSTI — portable config template
+# Copy:  cp config/config.example.yaml config/config.yaml
+# Guide: docs/CONFIG.md  (mandatory vs optional)
+# Or use: config/pigsti_config_generator.html
+
+# --- Results directory (optional; default: ./results in the pipeline folder) ---
+# Override on the CLI:  snakemake --config results_root=/path/to/output
+# Or environment:      export PIGSTI_RESULTS_ROOT=/path/to/output
+# results_root: "/path/to/PIGSTI_runs/my_run"
+
+# --- Config inputs ---
+# Copy the example manifests first:
+#   cp config/samples.example.tsv config/samples.tsv
+#   cp config/Pathogen_spreadsheet.example.csv config/Pathogen_spreadsheet.csv
+samples: "config/samples.tsv"
+pathogen_spreadsheet: "config/Pathogen_spreadsheet.csv"
+
+# --- Adapter sequences (optional; Illumina TruSeq defaults if omitted) ---
+# Set to "" (empty string) to let the tool auto-detect / use built-in defaults.
+# Useful when samples.tsv contains a mix of PE and SE libraries.
+#
+# AdapterRemoval (paired-end rule):
+# adapter_removal_adapter1: "AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC"
+# adapter_removal_adapter2: "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
+#
+# cutadapt (single-end rule):
+# cutadapt_adapter: "AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC"
+
+# --- Alignment ---
+host_aligner: bwa          # bwa | bowtie2
+pathogen_aligner: bwa      # bwa | bowtie2
+# default: Bowtie2-unmapped reads
+# super_careful: Non-concatenated host-unmapped reads
+pathogen_mapping_mode: default
+dedup_tool: "samtools"     # samtools | picard (picard via conda env)
+merge_tool: "samtools"     # samtools | picard (picard via conda env)
+
+# --- Host references (species names must match samples.tsv) ---
+bwa_indices:
+  Pig: "/path/to/sus_scrofa.fa"
+  Human: "/path/to/hs37d5.fa"
+mtDNA_indices:
+  Pig: "/path/to/pig_mito.fa"
+  Human: "/path/to/human_mito.fa"
+
+# Required when host_aligner: bowtie2 (or FASTA in bwa_indices for auto-build)
+# bowtie2_indices:
+#   Pig: "/path/to/susScr11"
+# bowtie2_mtDNA_indices:
+#   Pig: "/path/to/pig_mito"
+
+# --- Databases & chimera index ---
+kraken_db: "/path/to/krakenuniq_db"
+# Bowtie2 PREFIX for chimera / unaligned extraction (files: .../chimera.1.bt2l)
+host_index: "/path/to/refs/chimera"
+
+# --- Optional modules ---
+enable_hops: false
+# hops_malt_index: "/path/to/malt_db"
+# hops_resources: "/path/to/HOPS/Resources"
+# hops_heap_gb: 800
+# hops_parallel: true              # per-sample MALT (or mmap batch)
+# hops_malt_mmap: true             # single-node: page-cache + malt-run --memoryMode map
+# hops_parallel_jobs: 4
+# hops_threads_per_job: 10         # omit for auto (threadsMalt / hops_parallel_jobs)
+
+enable_decom: false
+# decOM_sources: "/path/to/decOM_sources"
+# decom_memory: "64GB"
+# decom_threads: 8
+
+pathogen_screening_only: false   # true → skip host/mtDNA mapping & QC
+enable_sexing: true              # residual method; Cow, Goat, Sheep, Dog only
+enable_multi_qc_dashboard: false
+cleanup_intermediates: false
+
+# Edit-distance damage split is always on in the pipeline.
+# edit_distance_damage_window_size: 5
+
+# --- Pathogen detection → reference mapping ---
+# Outputs: results/pathogen/{bio}/evalue/pathogen/{bio}_pathogen.csv
+pathogen_detection_criteria:
+  map_all_escore_pathogens: false
+  use_evalue_for_detection: true   # false → use E-score instead
+  guellil_evalue_threshold: 0.001
+  escore_threshold: 5
+  reads_threshold: 50
+
+# FastQ Screen conf (exe always from conda env)
+fastq_screen_conf: "config/fastq_screen.conf"
+fastq_screen_full_dataset_rescreen: true
+fastq_screen_full_dataset_min_one_hit: 50

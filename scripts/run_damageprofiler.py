@@ -30,19 +30,85 @@ def main():
                 lf.write(msg + "\n")
         sys.exit(1)
 
-    # Load config and resolve reference
-    with open(cfg_path, "r") as f:
-        cfg = yaml.safe_load(f)
-    ref_map = cfg.get(index_key, {}) or {}
-    ref_path = ref_map.get(species, "")
-
-    if not ref_path:
-        msg = f"Reference for species '{species}' not found under '{index_key}' in {cfg_path}"
+    # If no species could be determined from FastQ Screen, skip gracefully.
+    if not species or species.strip().lower() in {"no species found", "none", "na"}:
+        msg = f"No reliable mtDNA species for '{species_file}' (value='{species}'). Skipping DamageProfiler."
         print(msg, file=sys.stderr)
         if log_path:
             with open(log_path, "a") as lf:
                 lf.write(msg + "\n")
-        sys.exit(1)
+        # Create minimal placeholder outputs so downstream steps can proceed.
+        note_path = os.path.join(out_dir, "NO_SPECIES.txt")
+        try:
+            with open(note_path, "w") as nf:
+                nf.write(f"No species found for mtDNA damage profiling (species file: {species_file}).\n")
+            placeholder = os.path.join(out_dir, "misincorporation.txt")
+            with open(placeholder, "w") as pf:
+                pf.write("")
+        except Exception as e:
+            print(f"Failed to write placeholder outputs for missing species: {e}", file=sys.stderr)
+            sys.exit(1)
+        sys.exit(0)
+
+    # Load config and resolve reference (case-insensitive species keys; FastQ Screen casing varies)
+    with open(cfg_path, "r") as f:
+        cfg = yaml.safe_load(f)
+    ref_map = cfg.get(index_key, {}) or {}
+
+    def resolve_ref_path(sp: str) -> str:
+        if not sp:
+            return ""
+        if sp in ref_map:
+            return ref_map[sp] or ""
+        sp_l = sp.strip().lower()
+        for k, v in ref_map.items():
+            if str(k).strip().lower() == sp_l:
+                return v or ""
+        return ""
+
+    ref_configured = resolve_ref_path(species)
+
+    def pick_existing_fasta(configured: str) -> str:
+        """
+        mtDNA_indices should list a FASTA path. Users sometimes paste the Bowtie2
+        index prefix (same basename as dog.fa). If `configured` is not a non-empty
+        file, try basename + .fa / .fasta / .fna.
+        """
+        if not configured:
+            return configured
+        if os.path.isfile(configured) and os.path.getsize(configured) > 0:
+            return configured
+        base = configured.rstrip("/")
+        for suf in (".fa", ".fasta", ".fna"):
+            cand = base + suf
+            if os.path.isfile(cand) and os.path.getsize(cand) > 0:
+                return cand
+        return configured
+
+    ref_path = pick_existing_fasta(ref_configured)
+    if ref_path != ref_configured and log_path:
+        with open(log_path, "a") as lf:
+            lf.write(
+                f"[run_damageprofiler] Using FASTA {ref_path!r} "
+                f"(mtDNA_indices had {ref_configured!r}, likely a Bowtie2 prefix)\n"
+            )
+
+    if not ref_path:
+        msg = (
+            f"Reference for species '{species}' not found under '{index_key}' in {cfg_path}. "
+            "Skipping DamageProfiler (stub outputs)."
+        )
+        print(msg, file=sys.stderr)
+        if log_path:
+            with open(log_path, "a") as lf:
+                lf.write(msg + "\n")
+        note_path = os.path.join(out_dir, "NO_REFERENCE_CONFIG.txt")
+        with open(note_path, "w") as nf:
+            nf.write(msg + "\n")
+        placeholder = os.path.join(out_dir, "misincorporation.txt")
+        with open(placeholder, "w") as pf:
+            pf.write("")
+        sys.exit(0)
 
     # Sanity checks
     if not os.path.exists(bam) or os.path.getsize(bam) == 0:
@@ -53,12 +119,22 @@ def main():
                 lf.write(msg + "\n")
         sys.exit(1)
     if not os.path.exists(ref_path) or os.path.getsize(ref_path) == 0:
-        msg = f"Missing or empty reference: {ref_path}"
+        msg = (
+            f"Missing or empty reference FASTA: {ref_path}. "
+            f"Fix '{index_key}' in {cfg_path} or install the file. "
+            "Skipping DamageProfiler (stub outputs)."
+        )
         print(msg, file=sys.stderr)
         if log_path:
             with open(log_path, "a") as lf:
                 lf.write(msg + "\n")
-        sys.exit(1)
+        note_path = os.path.join(out_dir, "NO_REFERENCE_FILE.txt")
+        with open(note_path, "w") as nf:
+            nf.write(msg + "\n")
+        placeholder = os.path.join(out_dir, "misincorporation.txt")
+        with open(placeholder, "w") as pf:
+            pf.write("")
+        sys.exit(0)
 
     # Ensure FASTA index exists for tools that may expect it
     fai_path = ref_path + ".fai"

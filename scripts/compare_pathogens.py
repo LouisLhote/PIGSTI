@@ -30,17 +30,18 @@ def main():
         print("✔️ Available columns:", ", ".join(df_hops.columns))
         print(f"⚠️ Skipping sample {sample_name}. No output will be written.")
         
-        html_output = f"results/comparison/{sample_name}_heatmap.html"
-        tsv_output = f"results/comparison/{sample_name}_comparison.tsv"
-        os.makedirs("results/comparison", exist_ok=True)
+        html_output = f"results/pathogen/{sample_name}/comparison/{sample_name}_heatmap.html"
+        tsv_output = f"results/pathogen/{sample_name}/comparison/{sample_name}_comparison.tsv"
+        os.makedirs(f"results/pathogen/{sample_name}/comparison", exist_ok=True)
         with open(html_output, "w") as f:
             f.write(f"<h3>Sample column '{sample_col}' not found. Skipping.</h3>\n")
         with open(tsv_output, "w") as f:
             f.write("taxid\tKrakenuniq name\tIn_Krakenuniq\tIn_HOPS\n")
         return
 
+    # Match Snakefile + summarize_pathogen_data: HOPS count > 1
     hops_present = set(
-        df_hops[sample_col][df_hops[sample_col] >= 2]
+        df_hops[sample_col][df_hops[sample_col] > 1]
         .index.map(normalize_name)
     )
 
@@ -66,13 +67,13 @@ def main():
 
     df_merged = df_merged[(df_merged["In_Krakenuniq"]) | (df_merged["In_HOPS"])]
 
-    os.makedirs("results/comparison", exist_ok=True)
-    tsv_output = f"results/comparison/{sample_name}_comparison.tsv"
+    os.makedirs(f"results/pathogen/{sample_name}/comparison", exist_ok=True)
+    tsv_output = f"results/pathogen/{sample_name}/comparison/{sample_name}_comparison.tsv"
     df_merged.to_csv(tsv_output, sep="\t", index=False)
 
     if df_merged.empty:
         print(f"ℹ️ No pathogens found for sample {sample_name}, skipping heatmap.")
-        html_output = f"results/comparison/{sample_name}_heatmap.html"
+        html_output = f"results/pathogen/{sample_name}/comparison/{sample_name}_heatmap.html"
         with open(html_output, "w") as f:
             f.write(f"<h3>No pathogens found in {sample_name}, so no heatmap was generated.</h3>\n")
         return
@@ -91,8 +92,8 @@ def main():
     plt.title(f"Presence of Pathogens — {sample_name}")
     plt.tight_layout()
 
-    img_path = f"results/comparison/{sample_name}_heatmap.png"
-    html_output = f"results/comparison/{sample_name}_heatmap.html"
+    img_path = f"results/pathogen/{sample_name}/comparison/{sample_name}_heatmap.png"
+    html_output = f"results/pathogen/{sample_name}/comparison/{sample_name}_heatmap.html"
     plt.savefig(img_path, dpi=150)
     plt.close()
 

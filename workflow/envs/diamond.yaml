@@ -1,0 +1,8 @@
+name: diamond_env
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - diamond
+  - python=3.11
+  - pandas

@@ -32,6 +32,9 @@ with open(config_file) as f:
 
 default_min_reads = int(config["defaults"]["min_reads"])
 default_min_escore = float(config["defaults"]["min_escore"])
+criteria_cfg = config.get("pathogen_detection_criteria", {}) if isinstance(config, dict) else {}
+use_evalue_for_detection = bool(criteria_cfg.get("use_evalue_for_detection", True))
+default_evalue_threshold = float(criteria_cfg.get("guellil_evalue_threshold", 0.001))
 
 spreadsheet = pd.read_csv("config/Pathogen_spreadsheet.csv")
 spreadsheet.columns = [col.strip().lower() for col in spreadsheet.columns]
@@ -39,12 +42,45 @@ spreadsheet = spreadsheet.rename(columns={"tax id": "taxid"})
 spreadsheet["taxid"] = spreadsheet["taxid"].astype(int)
 
 # -----------------------------
-# Load Kraken report
+# Load Kraken report (robust to empty / malformed files)
 # -----------------------------
 with open(kraken_report) as f:
     lines = f.readlines()
 
-header_idx = next(i for i, line in enumerate(lines) if line.startswith("%"))
+# Find the header line that starts with '%'. If none exists (e.g. empty or
+# malformed Kraken report), short-circuit by writing empty outputs.
+header_idx = None
+for i, line in enumerate(lines):
+    if line.startswith("%"):
+        header_idx = i
+        break
+
+if header_idx is None:
+    # No usable table in the Kraken report: create empty CSVs so downstream
+    # rules see "no candidates" instead of crashing.
+    empty_cols = [
+        "reads",
+        "uniq_kmers",
+        "taxID",
+        "rank",
+        "taxonomy",
+        "cov",
+        "dup",
+        "taxReads",
+        "Escore",
+        "Guellil_et_al_Evalue",
+        "taxid",
+        "min_escore",
+        "min_reads",
+    ]
+    empty_df = pd.DataFrame(columns=empty_cols)
+    # Genus and species outputs: simply empty tables.
+    empty_df.to_csv(output_genus, index=False)
+    empty_df.to_csv(output_species, index=False)
+    # Pathogen output: also empty (no taxa pass thresholds because none exist).
+    empty_df.to_csv(output_pathogen, index=False)
+    sys.exit(0)
+
 header = lines[header_idx].strip().lstrip("%").strip().split("\t")
 data_lines = lines[header_idx + 1:]
 
@@ -81,6 +117,13 @@ df = df.astype({
 df["Escore"] = e_score_dexp_vec(df["uniq_kmers"], df["reads"], df["cov"])
 
 # -----------------------------
+# Compute Guellil et al Evalue: (Kmers/reads)*coverage
+# -----------------------------
+df["Guellil_et_al_Evalue"] = (df["uniq_kmers"] / df["reads"]) * df["cov"]
+df["Guellil_et_al_Evalue"] = df["Guellil_et_al_Evalue"].replace([np.inf, -np.inf], np.nan)
+df["Guellil_et_al_Evalue"] = df["Guellil_et_al_Evalue"].fillna(0)
+
+# -----------------------------
 # Write outputs (genus/species)
 # -----------------------------
 df.to_csv(output_genus, index=False)
@@ -91,11 +134,34 @@ df[df["rank"] == "species"].to_csv(output_species, index=False)
 # -----------------------------
 known_taxids = spreadsheet["taxid"].unique()
 # Merge thresholds from spreadsheet to ensure *only* those taxon are selected and proper fields used
-thresholds = spreadsheet[["taxid", "min_escore", "min_reads"]].drop_duplicates()
+threshold_cols = ["taxid", "min_escore", "min_reads"]
+candidate_evalue_cols = [
+    "guellil_et_al_evalue_threshold",
+    "max_evalue",
+    "evalue_threshold",
+]
+present_evalue_cols = [c for c in candidate_evalue_cols if c in spreadsheet.columns]
+threshold_cols.extend(present_evalue_cols)
+
+thresholds = spreadsheet[threshold_cols].drop_duplicates().copy()
 thresholds = thresholds.fillna({
     "min_escore": default_min_escore,
-    "min_reads": default_min_reads
+    "min_reads": default_min_reads,
 })
+
+# Compute a single effective evalue threshold from allowed spreadsheet aliases.
+if present_evalue_cols:
+    thresholds["guellil_et_al_evalue_threshold"] = (
+        thresholds[present_evalue_cols]
+        .apply(pd.to_numeric, errors="coerce")
+        .bfill(axis=1)
+        .iloc[:, 0]
+    )
+else:
+    thresholds["guellil_et_al_evalue_threshold"] = np.nan
+thresholds["guellil_et_al_evalue_threshold"] = thresholds["guellil_et_al_evalue_threshold"].fillna(
+    default_evalue_threshold
+)
 
 # Merge df (Kraken report) species with spreadsheet, keep only pathogens from spreadsheet
 pathogen_df = df[df["taxID"].isin(known_taxids)].copy()
@@ -105,16 +171,27 @@ pathogen_df = pathogen_df.merge(thresholds, left_on="taxID", right_on="taxid", h
 # Apply filters according to spreadsheet thresholds
 pathogen_df["min_escore"] = pathogen_df["min_escore"].fillna(default_min_escore)
 pathogen_df["min_reads"] = pathogen_df["min_reads"].fillna(default_min_reads)
+pathogen_df["guellil_et_al_evalue_threshold"] = pathogen_df["guellil_et_al_evalue_threshold"].fillna(
+    default_evalue_threshold
+)
 
-filtered_pathogens = pathogen_df[
-    (pathogen_df["reads"] >= pathogen_df["min_reads"]) &
-    (pathogen_df["Escore"] >= pathogen_df["min_escore"])
-].copy()
+if use_evalue_for_detection:
+    # Guellil metric mode (project-specific): larger values are better.
+    filtered_pathogens = pathogen_df[
+        (pathogen_df["reads"] >= pathogen_df["min_reads"]) &
+        (pathogen_df["Guellil_et_al_Evalue"] > pathogen_df["guellil_et_al_evalue_threshold"])
+    ].copy()
+else:
+    filtered_pathogens = pathogen_df[
+        (pathogen_df["reads"] >= pathogen_df["min_reads"]) &
+        (pathogen_df["Escore"] >= pathogen_df["min_escore"])
+    ].copy()
 
 # Choose and reorder final output columns—all downstream code expects lowercase 'taxid'
 out_cols = [
     'reads', 'uniq_kmers', 'taxid', 'rank', 'taxonomy', 'cov', 'dup',
-    'taxReads', 'Escore', 'min_escore', 'min_reads'
+    'taxReads', 'Escore', 'Guellil_et_al_Evalue', 'min_escore', 'min_reads',
+    'guellil_et_al_evalue_threshold'
 ]
 out_cols = [c for c in out_cols if c in filtered_pathogens.columns]
 filtered_pathogens[out_cols].to_csv(output_pathogen, index=False)

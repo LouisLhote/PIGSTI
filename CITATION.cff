@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: >-
+  If you use PIGSTI, please cite this software (and the associated paper when
+  available). Always record the exact release tag or commit SHA used for your run
+  (see results/final/run_manifest.json).
+title: "PIGSTI: a modular, reproducible pipeline for host identification and detection of ancient pathogens and zoonotic microbes in animal palaeogenomic data"
+type: software
+authors:
+  - family-names: Lhote
+    given-names: Louis
+    affiliation: "Trinity College Dublin"
+version: "1.0.0"
+date-released: "2026-08-26"
+license: MIT
+repository-code: "https://github.com/LouisLhote/PIGSTI"
+url: "https://github.com/LouisLhote/PIGSTI"
+keywords:
+  - ancient DNA
+  - pathogen detection
+  - pathogen authentication
+  - Snakemake
+  - metagenomics
+  - KrakenUniq
+  - HOPS
+abstract: >-
+  Ancient genomics has enabled discovery of diverse pathogens across time periods,
+  host species, and material types. PIGSTI (Pathogen anImal Genome Sequence ToolkIt)
+  is a Snakemake pipeline for host identification and pathogen screening in shotgun
+  data from ancient animal remains. It performs host mapping and pathogen
+  identification with multi-criteria authentication, generating outputs suitable for
+  population genetics and phylogenetic analyses.

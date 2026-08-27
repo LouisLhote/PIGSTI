@@ -83,7 +83,7 @@ class PublicationFigureGenerator:
     
     def load_abundance_data(self):
         """Load abundance matrix data"""
-        abundance_file = Path(self.results_dir) / "KRAKENUNIQ_ABUNDANCE_MATRIX/krakenuniq_abundance_matrix_absolute.csv"
+        abundance_file = Path(self.results_dir) / "metagenomics/kraken_abundance/krakenuniq_abundance_matrix_absolute.csv"
         if abundance_file.exists():
             self.data['abundance'] = pd.read_csv(abundance_file, index_col=0)
     

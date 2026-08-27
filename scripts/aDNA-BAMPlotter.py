@@ -97,10 +97,17 @@ for ID,LEN in pbar:
         if args.deam:
             for i in range (1,6):
                 df_5p = deam_df[(deam_df['Chr'].values == ID) & (deam_df['End'].values == "5p") & (deam_df['Pos'].values == i)]
-                mean5 = df_5p['C>T'].sum()/df_5p['C'].sum()
+                # Guard against zero counts to avoid RuntimeWarning: invalid value encountered in scalar divide
+                if df_5p['C'].sum() > 0:
+                    mean5 = df_5p['C>T'].sum()/df_5p['C'].sum()
+                else:
+                    mean5 = 0.0
                 deamn5.update({i:mean5})
                 df_3p = deam_df[(deam_df['Chr'].values == ID) & (deam_df['End'].values == "3p") & (deam_df['Pos'].values == i)]
-                mean3 = df_3p['G>A'].sum()/df_3p['G'].sum()
+                if df_3p['G'].sum() > 0:
+                    mean3 = df_3p['G>A'].sum()/df_3p['G'].sum()
+                else:
+                    mean3 = 0.0
                 deamn3.update({i:mean3})
 
         #Subplot1

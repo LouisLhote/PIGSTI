@@ -1,18 +1,14 @@
 #!/usr/bin/env Rscript
 
-if (!requireNamespace("MetBrewer", quietly = TRUE)) {
-  install.packages("MetBrewer", repos = "https://cloud.r-project.org")
-}
-
 library(tidyverse)
-library(MetBrewer)
+library(viridis)
 
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 3) {
   stop("Usage: Rscript krakenuniq_plot_heatmap.R <indir> <abs_plot_out.pdf> <norm_plot_out.pdf>")
 }
 
-indir <- args[1]               # e.g. "results/KRAKENUNIQ_ABUNDANCE_MATRIX"
+indir <- args[1]               # e.g. "results/metagenomics/kraken_abundance"
 abs_plot_out <- args[2]        # PDF output for absolute heatmap
 norm_plot_out <- args[3]       # PDF output for normalized heatmap
 
@@ -46,14 +42,14 @@ df_abs_long <- df_abs_long %>%
 df_norm_long <- df_norm_long %>%
   mutate(species = factor(species, levels = species_order))
 
-# Define color palette
-hokusai_pal <- met.brewer("Hokusai1", type = "continuous", n = 50)
+# viridis is in workflow/envs/r.yaml (no runtime install.packages on cluster nodes)
+heatmap_pal <- viridis(50, option = "D")
 
 # -------- Absolute Abundance Heatmap --------
 abs_plot <- ggplot(df_abs_long, aes(x = sample, y = species, fill = abundance)) +
   geom_tile() +
   geom_text(aes(label = abundance), size = 3, color = "white") +
-  scale_fill_gradientn(colors = hokusai_pal, na.value = "grey90") +
+  scale_fill_gradientn(colors = heatmap_pal, na.value = "grey90") +
   theme_minimal() +
   labs(title = "Absolute Abundance Heatmap", x = "Sample", y = "Species") +
   theme(
@@ -67,7 +63,7 @@ ggsave(abs_plot_out, abs_plot, width = 14, height = 10)
 norm_plot <- ggplot(df_norm_long, aes(x = sample, y = species, fill = norm_abundance)) +
   geom_tile() +
   geom_text(aes(label = norm_label), size = 3, color = "white") +
-  scale_fill_gradientn(colors = hokusai_pal, na.value = "grey90") +
+  scale_fill_gradientn(colors = heatmap_pal, na.value = "grey90") +
   theme_minimal() +
   labs(title = "Normalized Abundance Heatmap", x = "Sample", y = "Species") +
   theme(

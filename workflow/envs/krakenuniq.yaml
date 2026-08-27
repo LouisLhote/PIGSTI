@@ -1,6 +1,9 @@
+# KrakenUniq classifier 1.0.4 (publication pin).
+# Channels: conda-forge then bioconda (do not add "defaults" in ~/.condarc on HPC).
+# Jellyfish 1.x is pulled in as kmer-jellyfish (bioconda name — not "jellyfish").
 name: krakenuniq
 channels:
-  - bioconda
   - conda-forge
+  - bioconda
 dependencies:
-  - krakenuniq
+  - krakenuniq =1.0.4

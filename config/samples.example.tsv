@@ -1,0 +1,4 @@
+sample	pcr	r1	r2	RGLB	sequencing_run
+Sample01	Sample01_PCR1	/path/to/Sample01_PCR1_R1.fastq.gz	/path/to/Sample01_PCR1_R2.fastq.gz	LIB01	Run1
+Sample01	Sample01_PCR2	/path/to/Sample01_PCR2_R1.fastq.gz	/path/to/Sample01_PCR2_R2.fastq.gz	LIB02	Run1
+Sample02	Sample02_PCR1	/path/to/Sample02_PCR1_R1.fastq.gz		LIB03	Run1

@@ -1,0 +1,4 @@
+taxID,Krakenuniq name,Hops name,bwa index,min_escore,min_reads,Guellil_et_al_Evalue_threshold
+666,Vibrio cholerae,Vibrio cholerae,/path/to/refs/Vibrio_cholerae.fa,5,50,0.001
+632,Yersinia pestis,Yersinia pestis,/path/to/refs/Yersinia_pestis.fa,5,50,0.001
+1773,Mycobacterium tuberculosis,Mycobacterium tuberculosis,/path/to/refs/Mycobacterium_tuberculosis.fa,5,50,0.001

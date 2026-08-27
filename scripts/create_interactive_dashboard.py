@@ -50,7 +50,7 @@ class PathogenDetectionDashboard:
     
     def load_escore_data(self):
         """Load E-Score results"""
-        escore_files = Path(self.results_dir).glob("*/Escore/pathogen/*_pathogen.csv")
+        escore_files = Path(self.results_dir).glob("*/evalue/pathogen/*_pathogen.csv")
         for file in escore_files:
             sample = file.parent.parent.name
             df = pd.read_csv(file)
@@ -98,7 +98,7 @@ class PathogenDetectionDashboard:
     
     def load_bwa_data(self):
         """Load BWA alignment data"""
-        bwa_files = Path(self.results_dir).glob("*/bwa_pathogen/*.ani.txt")
+        bwa_files = Path(self.results_dir).glob("*/pathogen_mapping/*.ani.txt")
         for file in bwa_files:
             parts = file.stem.split('_')
             if len(parts) >= 3:
@@ -388,7 +388,7 @@ class PathogenDetectionDashboard:
         
         return fig
     
-    def generate_dashboard_html(self, output_file="results/pathogen_detection_dashboard.html"):
+    def generate_dashboard_html(self, output_file="results/final/pathogen_detection_dashboard.html"):
         """Generate the complete interactive dashboard HTML"""
         print("Generating interactive dashboard...")
         

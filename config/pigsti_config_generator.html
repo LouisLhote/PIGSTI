@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PIGSTI — Config Generator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root {
+  --bg0: #0f1c1a;
+  --bg1: #152624;
+  --card: rgba(255,255,255,0.92);
+  --card-solid: #f7faf8;
+  --ink: #12201d;
+  --muted: #5a6f69;
+  --line: #d5e3dd;
+  --accent: #0d9488;
+  --accent-deep: #0f766e;
+  --accent-soft: #ccfbf1;
+  --amber: #b45309;
+  --amber-soft: #ffedd5;
+  --rose: #be123c;
+  --rose-soft: #ffe4e6;
+  --ok: #047857;
+  --ok-soft: #d1fae5;
+  --shadow: 0 10px 40px rgba(15,28,26,0.12);
+  --radius: 18px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #134e4a 0%, transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, #1e3a5f 0%, transparent 50%),
+    linear-gradient(165deg, var(--bg0), var(--bg1) 40%, #1a2e2a);
+  min-height: 100vh;
+  padding: 40px 20px 80px;
+}
+.wrap { max-width: 920px; margin: 0 auto; }
+
+/* Hero */
+.hero {
+  text-align: center; color: #ecfdf5; margin-bottom: 36px;
+  position: relative;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px; border-radius: 999px;
+  background: rgba(204,251,241,0.12); border: 1px solid rgba(204,251,241,0.25);
+  font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase;
+  font-weight: 600; color: #99f6e4; margin-bottom: 18px;
+}
+.hero h1 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: clamp(2.2rem, 5vw, 3rem); font-weight: 700;
+  letter-spacing: -0.02em; line-height: 1.15;
+}
+.hero h1 em { font-style: normal; color: #5eead4; }
+.hero p { margin-top: 12px; color: #a7c4bc; font-size: 1.02rem; max-width: 520px; margin-left: auto; margin-right: auto; }
+.hero code {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.85em;
+  background: rgba(255,255,255,0.08); padding: 2px 7px; border-radius: 6px;
+}
+
+/* Progress strip */
+.steps {
+  display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;
+  margin: 28px 0 8px;
+}
+.step-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(94,234,212,0.35);
+}
+
+/* Cards */
+.section {
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.55);
+  border-radius: var(--radius);
+  padding: 28px 30px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+  animation: rise 0.45s ease both;
+}
+.section:nth-child(2) { animation-delay: 0.03s; }
+.section:nth-child(3) { animation-delay: 0.06s; }
+.section:nth-child(4) { animation-delay: 0.09s; }
+.section:nth-child(5) { animation-delay: 0.12s; }
+.section:nth-child(6) { animation-delay: 0.15s; }
+.section:nth-child(7) { animation-delay: 0.18s; }
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+.section-header {
+  display: flex; align-items: flex-start; gap: 14px;
+  margin-bottom: 22px; padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.section-icon {
+  width: 44px; height: 44px; border-radius: 14px;
+  display: grid; place-items: center; font-size: 1.2rem; flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.04);
+}
+.icon-teal { background: linear-gradient(145deg, #ccfbf1, #99f6e4); }
+.icon-amber { background: linear-gradient(145deg, #ffedd5, #fdba74); }
+.icon-slate { background: linear-gradient(145deg, #e2e8f0, #cbd5e1); }
+.icon-rose { background: linear-gradient(145deg, #ffe4e6, #fda4af); }
+.icon-mint { background: linear-gradient(145deg, #d1fae5, #6ee7b7); }
+.section-header h2 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1.28rem; font-weight: 700; letter-spacing: -0.01em;
+}
+.section-header .desc { font-size: 0.86rem; color: var(--muted); margin-top: 2px; }
+.section-num {
+  margin-left: auto; font-size: 0.7rem; font-weight: 700;
+  color: var(--accent); letter-spacing: 0.06em; opacity: 0.7;
+}
+
+/* Fields */
+.field { margin-bottom: 16px; }
+.field:last-child { margin-bottom: 0; }
+.field-label { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.field-label label { font-weight: 600; font-size: 0.9rem; }
+.tag {
+  font-size: 0.62rem; padding: 2px 8px; border-radius: 999px;
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.tag-req { background: var(--rose-soft); color: var(--rose); }
+.tag-opt { background: var(--ok-soft); color: var(--ok); }
+.hint { font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; line-height: 1.45; }
+input[type="text"], input[type="number"], select {
+  width: 100%; padding: 11px 14px;
+  border: 1.5px solid var(--line); border-radius: 12px;
+  font-size: 0.92rem; font-family: inherit;
+  background: #fff; color: var(--ink);
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+input:hover, select:hover { border-color: #a8c5bb; }
+input:focus, select:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(13,148,136,0.15);
+  background: #fff;
+}
+.mono { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 640px) { .field-row { grid-template-columns: 1fr; } }
+
+.mode-pills { display: flex; gap: 10px; flex-wrap: wrap; }
+.mode-pill {
+  flex: 1; min-width: 200px; cursor: pointer;
+  border: 1.5px solid var(--line); border-radius: 14px;
+  padding: 14px 16px; background: #fff; transition: all 0.18s;
+}
+.mode-pill:hover { border-color: #99f6e4; }
+.mode-pill.active {
+  border-color: var(--accent); background: var(--accent-soft);
+  box-shadow: 0 0 0 3px rgba(13,148,136,0.12);
+}
+.mode-pill strong { display: block; font-size: 0.9rem; margin-bottom: 4px; }
+.mode-pill span { font-size: 0.78rem; color: var(--muted); line-height: 1.4; }
+.mode-pill input { display: none; }
+
+/* Toggles */
+.toggle-group { display: flex; flex-direction: column; }
+.toggle-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 4px; border-bottom: 1px solid #e8f0ec;
+}
+.toggle-item:last-child { border-bottom: none; }
+.toggle-info { flex: 1; cursor: pointer; user-select: none; padding-right: 16px; }
+.toggle-title { font-weight: 600; font-size: 0.92rem; }
+.toggle-desc { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+.switch {
+  position: relative; display: inline-block;
+  width: 52px; height: 28px; flex-shrink: 0; cursor: pointer;
+}
+.switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.slider {
+  position: absolute; inset: 0; background: #c5d5cf; border-radius: 28px;
+  transition: background 0.22s; pointer-events: none;
+}
+.slider::before {
+  content: ''; position: absolute; width: 22px; height: 22px;
+  left: 3px; bottom: 3px; background: white; border-radius: 50%;
+  transition: transform 0.22s; box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  pointer-events: none;
+}
+.switch input:checked + .slider { background: var(--accent); }
+.switch input:checked + .slider::before { transform: translateX(24px); }
+.toggle-extra {
+  display: none; padding: 16px; margin: 0 0 10px;
+  background: linear-gradient(180deg, #f0fdfa, #f8fffe);
+  border-radius: 14px; border: 1px solid #b2f5ea;
+}
+.toggle-extra.open { display: block; }
+
+/* Species */
+.subhead {
+  font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--muted); margin: 18px 0 10px;
+}
+.subhead:first-of-type { margin-top: 0; }
+.species-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+.species-row input { flex: 1; }
+.remove-btn {
+  background: #fff; border: 1.5px solid var(--line); color: var(--muted);
+  width: 40px; height: 40px; border-radius: 12px; cursor: pointer;
+  display: grid; place-items: center; transition: all 0.15s; font-size: 1rem;
+}
+.remove-btn:hover { background: var(--rose-soft); color: var(--rose); border-color: #fecdd3; }
+.add-btn {
+  background: transparent; border: 1.5px dashed #a8c5bb; color: var(--accent-deep);
+  padding: 10px; border-radius: 12px; cursor: pointer; font-size: 0.86rem;
+  font-weight: 600; width: 100%; transition: all 0.15s; font-family: inherit;
+}
+.add-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+
+/* Criteria */
+.criteria-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 640px) { .criteria-grid { grid-template-columns: 1fr; } }
+.criteria-card {
+  background: #fff; border: 1.5px solid var(--line);
+  border-radius: 14px; padding: 14px 16px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.criteria-card:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(13,148,136,0.12);
+}
+.criteria-card.featured {
+  border-color: var(--accent);
+  background: linear-gradient(160deg, #f0fdfa, #fff);
+}
+.cc-label { font-weight: 600; font-size: 0.84rem; }
+.cc-hint { font-size: 0.74rem; color: var(--muted); margin: 3px 0 10px; }
+.criteria-card input, .criteria-card select {
+  background: #f8faf9; font-family: 'JetBrains Mono', monospace; font-size: 0.84rem;
+}
+
+.group-title {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1.05rem; margin: 26px 0 12px; display: flex; align-items: center; gap: 10px;
+}
+.group-title::after {
+  content: ''; flex: 1; height: 1px; background: var(--line);
+}
+
+.collapsible-trigger {
+  cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px;
+  padding: 10px 0; color: var(--muted); font-weight: 600; font-size: 0.88rem;
+}
+.collapsible-trigger .chevron { transition: transform 0.2s; font-size: 0.7rem; }
+.collapsible-trigger.open .chevron { transform: rotate(90deg); }
+.collapsible-trigger.open { color: var(--ink); }
+.collapsible-body { display: none; padding-top: 6px; }
+.collapsible-body.open { display: block; }
+
+.note {
+  font-size: 0.8rem; color: var(--muted); background: #f0fdfa;
+  border: 1px solid #99f6e4; border-radius: 12px; padding: 12px 14px; margin-top: 14px;
+}
+
+/* Output */
+#output-section {
+  background: linear-gradient(180deg, #0f2926, #0b1f1c);
+  border: 1px solid rgba(94,234,212,0.25);
+  border-radius: var(--radius); padding: 28px 30px; margin-top: 28px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+  color: #ecfdf5;
+}
+#output-section .section-header { border-bottom-color: rgba(94,234,212,0.2); }
+#output-section .desc { color: #7dd3c4; }
+#output-section h2 { color: #5eead4; }
+#yaml-output {
+  width: 100%; min-height: 420px;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
+  background: #061412; color: #a7f3d0; border: 1px solid rgba(94,234,212,0.15);
+  border-radius: 14px; padding: 18px; resize: vertical; line-height: 1.55;
+}
+.btn-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.btn {
+  padding: 12px 20px; border: none; border-radius: 12px; font-weight: 600;
+  cursor: pointer; font-size: 0.88rem; transition: all 0.15s; font-family: inherit;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: var(--accent-deep); transform: translateY(-1px); }
+.btn-ghost {
+  background: rgba(255,255,255,0.08); color: #ccfbf1;
+  border: 1px solid rgba(94,234,212,0.25);
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.14); }
+
+.toast {
+  position: fixed; bottom: 28px; right: 28px;
+  background: var(--ok); color: white;
+  padding: 12px 18px; border-radius: 12px; font-weight: 600; font-size: 0.88rem;
+  opacity: 0; transform: translateY(12px); transition: all 0.3s; pointer-events: none;
+  z-index: 999; box-shadow: var(--shadow);
+}
+.toast.show { opacity: 1; transform: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hero">
+  <div class="hero-badge">Ancient DNA · Pathogen pipeline</div>
+  <h1>PIGSTI <em>Config</em> Generator</h1>
+  <p>Build a clean <code>config.yaml</code> without hand-editing YAML. Fill the form — download when ready.</p>
+  <div class="steps" aria-hidden="true">
+    <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+    <div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+  </div>
+</div>
+
+<!-- 1. Config inputs -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-icon icon-teal">01</div>
+    <div>
+      <h2>Config inputs</h2>
+      <div class="desc">Sample sheet and pathogen reference table</div>
+    </div>
+    <span class="section-num">INPUTS</span>
+  </div>
+  <div class="field-row">
+    <div class="field">
+      <div class="field-label"><label>samples.tsv</label><span class="tag tag-req">required</span></div>
+      <input type="text" id="samples" value="config/samples.tsv" class="mono">
+    </div>
+    <div class="field">
+      <div class="field-label"><label>Pathogen spreadsheet</label><span class="tag tag-req">required</span></div>
+      <input type="text" id="pathogen_spreadsheet" value="config/Pathogen_spreadsheet.csv" class="mono">
+    </div>
+  </div>
+</div>
+
+<!-- 2. Adapter trimming -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-icon icon-amber">02</div>
+    <div>
+      <h2>Adapter trimming</h2>
+      <div class="desc">Leave blank for Illumina TruSeq defaults · empty string for auto-detect</div>
+    </div>
+    <span class="section-num">TRIM</span>
+  </div>
+  <div class="subhead">AdapterRemoval · paired-end</div>
+  <div class="field-row">
+    <div class="field">
+      <div class="field-label"><label>Adapter 1 (read 1)</label><span class="tag tag-opt">optional</span></div>
+      <input type="text" id="ar_adapter1" placeholder="AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC" class="mono">
+    </div>
+    <div class="field">
+      <div class="field-label"><label>Adapter 2 (read 2)</label><span class="tag tag-opt">optional</span></div>
+      <input type="text" id="ar_adapter2" placeholder="AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT" class="mono">
+    </div>
+  </div>
+  <div class="subhead">cutadapt · single-end</div>
+  <div class="field">
+    <div class="field-label"><label>3′ adapter</label><span class="tag tag-opt">optional</span></div>
+    <input type="text" id="cutadapt_adapter" placeholder="AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC" class="mono">
+  </div>
+</div>
+
+<!-- 3. Alignment + tools -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-icon icon-slate">03</div>
+    <div>
+      <h2>Alignment settings</h2>
+      <div class="desc">Aligners, pathogen mapping mode, and BAM tools</div>
+    </div>
+    <span class="section-num">ALIGN</span>
+  </div>
+  <div class="field-row">
+    <div class="field">
+      <div class="field-label"><label>Host aligner</label></div>
+      <select id="host_aligner"><option value="bwa" selected>bwa</option><option value="bowtie2">bowtie2</option></select>
+    </div>
+    <div class="field">
+      <div class="field-label"><label>Pathogen aligner</label></div>
+      <select id="pathogen_aligner"><option value="bwa" selected>bwa</option><option value="bowtie2">bowtie2</option></select>
+    </div>
+  </div>
+
+  <div class="subhead">Pathogen mapping mode</div>
+  <div class="mode-pills" id="mapping-mode-pills">
+    <label class="mode-pill active">
+      <input type="radio" name="pathogen_mapping_mode" value="default" checked>
+      <strong>default</strong>
+      <span>Bowtie2-unmapped reads</span>
+    </label>
+    <label class="mode-pill">
+      <input type="radio" name="pathogen_mapping_mode" value="super_careful">
+      <strong>super_careful</strong>
+      <span>Non-concatenated host-unmapped reads</span>
+    </label>
+  </div>
+
+  <div class="subhead" style="margin-top:22px;">BAM tools</div>
+  <div class="field-row">
+    <div class="field">
+      <div class="field-label"><label>Dedup tool</label></div>
+      <select id="dedup_tool"><option value="samtools" selected>samtools</option><option value="picard">picard</option></select>
+    </div>
+    <div class="field">
+      <div class="field-label"><label>Merge tool</label></div>
+      <select id="merge_tool"><option value="samtools" selected>samtools</option><option value="picard">picard</option></select>
+    </div>
+  </div>
+  <div class="note">Picard and FastQ Screen are always taken from the pipeline conda environments — no custom executable paths needed.</div>
+</div>
+
+<!-- 4. Host references -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-icon icon-mint">04</div>
+    <div>
+      <h2>Host references</h2>
+      <div class="desc">Index paths per species — names must match <code>samples.tsv</code></div>
+    </div>
+    <span class="section-num">HOST</span>
+  </div>
+  <div class="subhead">BWA indices</div>
+  <div id="bwa-rows"></div>
+  <button class="add-btn" onclick="addSpeciesRow('bwa-rows')">+ Add species</button>
+
+  <div class="subhead">mtDNA indices</div>
+  <div id="mtdna-rows"></div>
+  <button class="add-btn" onclick="addSpeciesRow('mtdna-rows')">+ Add species</button>
+
+  <div style="margin-top:18px;">
+    <div class="collapsible-trigger" onclick="toggleCollapse(this)">
+      <span class="chevron">▶</span> Bowtie2 indices <span class="tag tag-opt">optional</span>
+    </div>
+    <div class="collapsible-body">
+      <div class="hint">Only needed when host or pathogen aligner is bowtie2</div>
+      <div id="bt2-rows"></div>
+      <button class="add-btn" onclick="addSpeciesRow('bt2-rows')">+ Add species</button>
+      <div class="subhead">Bowtie2 mtDNA indices</div>
+      <div id="bt2-mtdna-rows"></div>
+      <button class="add-btn" onclick="addSpeciesRow('bt2-mtdna-rows')">+ Add species</button>
+    </div>
+  </div>
+</div>
+
+<!-- 5. Databases -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-icon icon-teal">05</div>
+    <div>
+      <h2>Databases &amp; indices</h2>
+      <div class="desc">KrakenUniq database and chimera Bowtie2 index</div>
+    </div>
+    <span class="section-num">DB</span>
+  </div>
+  <div class="field">
+    <div class="field-label"><label>KrakenUniq DB directory</label><span class="tag tag-req">required</span></div>
+    <input type="text" id="kraken_db" placeholder="/path/to/krakenuniq_db" class="mono">
+  </div>
+  <div class="field">
+    <div class="field-label"><label>Host chimera Bowtie2 index prefix</label><span class="tag tag-req">required</span></div>
+    <div class="hint">Files: &lt;prefix&gt;.1.bt2l, .2.bt2l, …</div>
+    <input type="text" id="host_index" placeholder="/path/to/refs/chimera" class="mono">
+  </div>
+</div>
+
+<!-- 6. Pipeline modules -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-icon icon-amber">06</div>
+    <div>
+      <h2>Pipeline modules</h2>
+      <div class="desc">Optional analyses — edit-distance damage split always runs</div>
+    </div>
+    <span class="section-num">MODULES</span>
+  </div>
+  <div class="toggle-group">
+    <div class="toggle-item">
+      <label class="toggle-info" for="enable_hops">
+        <div class="toggle-title">HOPS</div>
+        <div class="toggle-desc">MaltExtract-based ancient pathogen screening</div>
+      </label>
+      <label class="switch"><input type="checkbox" id="enable_hops"><span class="slider"></span></label>
+    </div>
+    <div class="toggle-extra" id="hops-extra">
+      <div class="field"><div class="field-label"><label>MALT index</label></div><input type="text" id="hops_malt_index" placeholder="/path/to/malt_db" class="mono"></div>
+      <div class="field"><div class="field-label"><label>HOPS Resources</label></div><input type="text" id="hops_resources" placeholder="/path/to/HOPS/Resources" class="mono"></div>
+      <div class="field"><div class="field-label"><label>Java heap (GB)</label></div><div class="hint">Per MALT / HOPS invocation (−Xmx)</div><input type="text" id="hops_heap_gb" value="800"></div>
+
+      <div class="subhead" style="margin-top:8px;">Parallel MALT</div>
+      <div class="toggle-item" style="border-bottom:none;padding:8px 0;">
+        <label class="toggle-info" for="hops_parallel">
+          <div class="toggle-title">Run MALT in parallel</div>
+          <div class="toggle-desc">Per-sample MALT jobs (or mmap batch) instead of one serial HOPS run</div>
+        </label>
+        <label class="switch"><input type="checkbox" id="hops_parallel"><span class="slider"></span></label>
+      </div>
+      <div class="toggle-extra" id="hops-parallel-extra" style="margin-top:4px;">
+        <div class="toggle-item" style="border-bottom:1px solid #e8f0ec;padding:8px 0 12px;">
+          <label class="toggle-info" for="hops_malt_mmap">
+            <div class="toggle-title">mmap mode (single node)</div>
+            <div class="toggle-desc">Warm page cache + <code>malt-run --memoryMode map</code> — recommended on one large machine</div>
+          </label>
+          <label class="switch"><input type="checkbox" id="hops_malt_mmap"><span class="slider"></span></label>
+        </div>
+        <div class="field-row" style="margin-top:10px;">
+          <div class="field">
+            <div class="field-label"><label>Parallel jobs</label></div>
+            <div class="hint">Max concurrent MALT jobs</div>
+            <input type="text" id="hops_parallel_jobs" value="2">
+          </div>
+          <div class="field">
+            <div class="field-label"><label>Threads per job</label></div>
+            <div class="hint">Leave blank for auto (threadsMalt ÷ jobs)</div>
+            <input type="text" id="hops_threads_per_job" placeholder="auto">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toggle-item">
+      <label class="toggle-info" for="enable_decom">
+        <div class="toggle-title">decOM</div>
+        <div class="toggle-desc">Source tracking for contamination assessment</div>
+      </label>
+      <label class="switch"><input type="checkbox" id="enable_decom"><span class="slider"></span></label>
+    </div>
+    <div class="toggle-extra" id="decom-extra">
+      <div class="field"><div class="field-label"><label>decOM sources</label></div><input type="text" id="decOM_sources" placeholder="/path/to/decOM_sources" class="mono"></div>
+      <div class="field-row">
+        <div class="field"><div class="field-label"><label>Memory</label></div><input type="text" id="decom_memory" value="64GB"></div>
+        <div class="field"><div class="field-label"><label>Threads</label></div><input type="text" id="decom_threads" value="8"></div>
+      </div>
+    </div>
+
+    <div class="toggle-item">
+      <label class="toggle-info" for="enable_sexing">
+        <div class="toggle-title">Genetic sexing</div>
+        <div class="toggle-desc">Residual method for Cow, Goat, Sheep, Dog</div>
+      </label>
+      <label class="switch"><input type="checkbox" id="enable_sexing" checked><span class="slider"></span></label>
+    </div>
+
+    <div class="toggle-item">
+      <label class="toggle-info" for="pathogen_screening_only">
+        <div class="toggle-title">Pathogen screening only</div>
+        <div class="toggle-desc">Skip host / mtDNA mapping and QC</div>
+      </label>
+      <label class="switch"><input type="checkbox" id="pathogen_screening_only"><span class="slider"></span></label>
+    </div>
+
+    <div class="toggle-item">
+      <label class="toggle-info" for="enable_multi_qc">
+        <div class="toggle-title">Multi-QC dashboard</div>
+        <div class="toggle-desc">Interactive HTML QC report per sample</div>
+      </label>
+      <label class="switch"><input type="checkbox" id="enable_multi_qc"><span class="slider"></span></label>
+    </div>
+
+    <div class="toggle-item">
+      <label class="toggle-info" for="cleanup_intermediates">
+        <div class="toggle-title">Cleanup intermediates</div>
+        <div class="toggle-desc">Remove intermediate files after completion</div>
+      </label>
+      <label class="switch"><input type="checkbox" id="cleanup_intermediates"><span class="slider"></span></label>
+    </div>
+  </div>
+</div>
+
+<!-- 7. Authentication -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-icon icon-rose">07</div>
+    <div>
+      <h2>Pathogen authentication</h2>
+      <div class="desc">Detection filter and authentication score thresholds</div>
+    </div>
+    <span class="section-num">AUTH</span>
+  </div>
+
+  <div class="group-title">Detection filter</div>
+  <div class="toggle-item" style="border-bottom:1px solid #e8f0ec;padding:4px 0 14px;margin-bottom:14px;">
+    <label class="toggle-info" for="use_escore_instead">
+      <div class="toggle-title">Use E-score instead of E-value</div>
+      <div class="toggle-desc">Off (default) = Guellil E-value filter · On = KrakenUniq E-score filter</div>
+    </label>
+    <label class="switch"><input type="checkbox" id="use_escore_instead"><span class="slider"></span></label>
+  </div>
+  <div class="criteria-grid">
+    <div class="criteria-card featured" id="evalue-card">
+      <div class="cc-label">Guellil E-value threshold</div>
+      <div class="cc-hint">Primary filter — (K/R)×C · lower = stricter</div>
+      <input type="text" id="guellil_threshold" value="0.001">
+    </div>
+    <div class="criteria-card" id="escore-card" style="display:none;">
+      <div class="cc-label">E-score threshold</div>
+      <div class="cc-hint">KrakenUniq E-score minimum</div>
+      <input type="text" id="escore_threshold" value="5">
+    </div>
+    <div class="criteria-card">
+      <div class="cc-label">Reads threshold</div>
+      <div class="cc-hint">Minimum reads alongside the detection filter</div>
+      <input type="text" id="reads_threshold" value="50">
+    </div>
+  </div>
+
+  <div class="group-title">Authentication scores</div>
+  <div class="criteria-grid">
+    <div class="criteria-card"><div class="cc-label">ANI threshold (%)</div><div class="cc-hint">Average nucleotide identity</div><input type="text" id="ani_threshold" value="96.5"></div>
+    <div class="criteria-card"><div class="cc-label">Relative entropy (bacteria)</div><div class="cc-hint">0–1 · ≥ 0.9 recommended</div><input type="text" id="entropy_threshold" value="0.9"></div>
+    <div class="criteria-card"><div class="cc-label">Relative entropy (virus)</div><div class="cc-hint">Lower bar for viral genomes</div><input type="text" id="entropy_threshold_virus" value="0.7"></div>
+    <div class="criteria-card"><div class="cc-label">Breadth ratio</div><div class="cc-hint">Observed / expected coverage</div><input type="text" id="breadth_ratio_threshold" value="0.8"></div>
+    <div class="criteria-card"><div class="cc-label">5′ C→T damage</div><div class="cc-hint">Min terminal substitution rate</div><input type="text" id="damage_5p_ct_threshold" value="0.01"></div>
+    <div class="criteria-card"><div class="cc-label">3′ G→A damage</div><div class="cc-hint">Min terminal substitution rate</div><input type="text" id="damage_3p_ga_threshold" value="0.01"></div>
+    <div class="criteria-card"><div class="cc-label">Read mapping ratio</div><div class="cc-hint">Mapped / total reads</div><input type="text" id="read_mapping_ratio_threshold" value="0.5"></div>
+    <div class="criteria-card"><div class="cc-label">High confidence score</div><div class="cc-hint">Score fraction for high confidence</div><input type="text" id="high_confidence_threshold" value="0.7"></div>
+  </div>
+
+  <div class="group-title">Edit-distance metrics</div>
+  <div class="criteria-grid">
+    <div class="criteria-card"><div class="cc-label">Decay quality score</div><div class="cc-hint">Composite 0–1 · higher = better</div><input type="text" id="edit_distance_decay_quality_threshold" value="0.65"></div>
+    <div class="criteria-card"><div class="cc-label">No-damage decay quality min</div><div class="cc-hint">Min quality for no-damage subset</div><input type="text" id="edit_distance_no_damage_min" value="0.55"></div>
+    <div class="criteria-card"><div class="cc-label">Damage − no-damage min</div><div class="cc-hint">Min difference between subsets</div><input type="text" id="edit_distance_damage_minus" value="0.10"></div>
+    <div class="criteria-card"><div class="cc-label">Damage window (bp)</div><div class="cc-hint">Terminal bases for damage split</div><input type="text" id="edit_distance_damage_window" value="5"></div>
+  </div>
+
+  <div class="group-title">HOPS scoring</div>
+  <div class="criteria-grid">
+    <div class="criteria-card"><div class="cc-label">HOPS detection</div><div class="cc-hint">Minimum score for detection</div><input type="text" id="hops_detection_threshold" value="2"></div>
+    <div class="criteria-card"><div class="cc-label">HOPS edit distance</div><div class="cc-hint">Minimum for ED criterion</div><input type="text" id="hops_edit_distance_threshold" value="3"></div>
+    <div class="criteria-card"><div class="cc-label">HOPS damage</div><div class="cc-hint">Minimum for damage criterion</div><input type="text" id="hops_damage_threshold" value="4"></div>
+  </div>
+</div>
+
+<!-- Output -->
+<div id="output-section">
+  <div class="section-header">
+    <div class="section-icon icon-mint">↓</div>
+    <div>
+      <h2>Generated config.yaml</h2>
+      <div class="desc">Copy or download into your PIGSTI <code>config/</code> folder</div>
+    </div>
+  </div>
+  <textarea id="yaml-output" readonly></textarea>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="copyYaml()">Copy to clipboard</button>
+    <button class="btn btn-primary" onclick="downloadYaml()">Download config.yaml</button>
+    <button class="btn btn-ghost" onclick="resetAll()">Reset defaults</button>
+  </div>
+</div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+function addSpeciesRow(containerId, name='', path='') {
+  const c = document.getElementById(containerId);
+  const row = document.createElement('div');
+  row.className = 'species-row';
+  row.innerHTML =
+    '<input type="text" placeholder="Species name" value="'+name+'" class="mono" oninput="generate()">' +
+    '<input type="text" placeholder="/path/to/reference" value="'+path+'" class="mono" oninput="generate()">' +
+    '<button class="remove-btn" onclick="this.parentElement.remove();generate();" title="Remove">✕</button>';
+  c.appendChild(row);
+  generate();
+}
+function getSpeciesMap(id) {
+  const m = {};
+  document.querySelectorAll('#'+id+' .species-row').forEach(r => {
+    const inp = r.querySelectorAll('input');
+    const n = inp[0].value.trim(), p = inp[1].value.trim();
+    if (n && p) m[n] = p;
+  });
+  return m;
+}
+function toggleCollapse(el) {
+  el.classList.toggle('open');
+  el.nextElementSibling.classList.toggle('open');
+}
+function toggleExtra(checkboxId, extraId) {
+  document.getElementById(extraId).classList.toggle('open', document.getElementById(checkboxId).checked);
+}
+function val(id) { return document.getElementById(id).value.trim(); }
+function chk(id) { return document.getElementById(id).checked; }
+function mappingMode() {
+  const el = document.querySelector('input[name="pathogen_mapping_mode"]:checked');
+  return el ? el.value : 'default';
+}
+function yamlMap(obj, indent) {
+  return Object.entries(obj).map(function(e){ return ' '.repeat(indent)+e[0]+': "'+e[1]+'"'; }).join('\n');
+}
+function showToast(msg) {
+  var t = document.getElementById('toast'); t.textContent = msg;
+  t.classList.add('show'); setTimeout(function(){ t.classList.remove('show'); }, 2200);
+}
+
+function generate() {
+  var y = '# PIGSTI config.yaml — generated by PIGSTI Config Generator\n\n';
+
+  y += '# ── Config inputs ───────────────────────────────────────────\n';
+  y += 'samples: "'+val('samples')+'"\n';
+  y += 'pathogen_spreadsheet: "'+val('pathogen_spreadsheet')+'"\n\n';
+
+  var a1=val('ar_adapter1'), a2=val('ar_adapter2'), ca=val('cutadapt_adapter');
+  if (a1||a2||ca) {
+    y += '# ── Adapter trimming ─────────────────────────────────────────\n';
+    if (a1) y += 'adapter_removal_adapter1: "'+a1+'"\n';
+    if (a2) y += 'adapter_removal_adapter2: "'+a2+'"\n';
+    if (ca) y += 'cutadapt_adapter: "'+ca+'"\n';
+    y += '\n';
+  }
+
+  y += '# ── Alignment ───────────────────────────────────────────────\n';
+  y += 'host_aligner: '+val('host_aligner')+'\n';
+  y += 'pathogen_aligner: '+val('pathogen_aligner')+'\n';
+  y += 'pathogen_mapping_mode: '+mappingMode()+'\n';
+  y += 'dedup_tool: "'+val('dedup_tool')+'"\n';
+  y += 'merge_tool: "'+val('merge_tool')+'"\n\n';
+
+  var bwa = getSpeciesMap('bwa-rows');
+  if (Object.keys(bwa).length) y += 'bwa_indices:\n'+yamlMap(bwa,2)+'\n\n';
+  var mt = getSpeciesMap('mtdna-rows');
+  if (Object.keys(mt).length) y += 'mtDNA_indices:\n'+yamlMap(mt,2)+'\n\n';
+  var b2 = getSpeciesMap('bt2-rows');
+  if (Object.keys(b2).length) y += 'bowtie2_indices:\n'+yamlMap(b2,2)+'\n\n';
+  var b2m = getSpeciesMap('bt2-mtdna-rows');
+  if (Object.keys(b2m).length) y += 'bowtie2_mtDNA_indices:\n'+yamlMap(b2m,2)+'\n\n';
+
+  y += '# ── Databases & indices ──────────────────────────────────────\n';
+  if (val('kraken_db')) y += 'kraken_db: "'+val('kraken_db')+'"\n';
+  if (val('host_index')) y += 'host_index: "'+val('host_index')+'"\n';
+  y += '\n';
+
+  y += '# ── Pipeline modules ────────────────────────────────────────\n';
+  y += 'enable_hops: '+chk('enable_hops')+'\n';
+  if (chk('enable_hops')) {
+    if (val('hops_malt_index')) y += 'hops_malt_index: "'+val('hops_malt_index')+'"\n';
+    if (val('hops_resources')) y += 'hops_resources: "'+val('hops_resources')+'"\n';
+    if (val('hops_heap_gb')) y += 'hops_heap_gb: '+val('hops_heap_gb')+'\n';
+    y += 'hops_parallel: '+chk('hops_parallel')+'\n';
+    if (chk('hops_parallel')) {
+      y += 'hops_malt_mmap: '+chk('hops_malt_mmap')+'\n';
+      if (val('hops_parallel_jobs')) y += 'hops_parallel_jobs: '+val('hops_parallel_jobs')+'\n';
+      if (val('hops_threads_per_job')) y += 'hops_threads_per_job: '+val('hops_threads_per_job')+'\n';
+    }
+  }
+  y += 'enable_decom: '+chk('enable_decom')+'\n';
+  if (chk('enable_decom')) {
+    if (val('decOM_sources')) y += 'decOM_sources: "'+val('decOM_sources')+'"\n';
+    if (val('decom_memory')) y += 'decom_memory: "'+val('decom_memory')+'"\n';
+    if (val('decom_threads')) y += 'decom_threads: '+val('decom_threads')+'\n';
+  }
+  y += 'pathogen_screening_only: '+chk('pathogen_screening_only')+'\n';
+  y += 'enable_sexing: '+chk('enable_sexing')+'\n';
+  y += 'enable_multi_qc_dashboard: '+chk('enable_multi_qc')+'\n';
+  y += 'cleanup_intermediates: '+chk('cleanup_intermediates')+'\n';
+  y += '# edit-distance damage split is always enabled in the pipeline\n';
+  y += 'edit_distance_damage_window_size: '+val('edit_distance_damage_window')+'\n\n';
+
+  y += '# ── Pathogen detection criteria ──────────────────────────────\n';
+  y += 'pathogen_detection_criteria:\n';
+  y += '  map_all_escore_pathogens: false\n';
+  y += '  use_evalue_for_detection: '+(!chk('use_escore_instead'))+'\n';
+  y += '  guellil_evalue_threshold: '+val('guellil_threshold')+'\n';
+  y += '  escore_threshold: '+val('escore_threshold')+'\n';
+  y += '  reads_threshold: '+val('reads_threshold')+'\n\n';
+
+  y += '# ── Authentication score thresholds ──────────────────────────\n';
+  y += 'ani_threshold: '+val('ani_threshold')+'\n';
+  y += 'entropy_threshold: '+val('entropy_threshold')+'\n';
+  y += 'entropy_threshold_virus: '+val('entropy_threshold_virus')+'\n';
+  y += 'breadth_ratio_threshold: '+val('breadth_ratio_threshold')+'\n';
+  y += 'damage_5p_ct_threshold: '+val('damage_5p_ct_threshold')+'\n';
+  y += 'damage_3p_ga_threshold: '+val('damage_3p_ga_threshold')+'\n';
+  y += 'read_mapping_ratio_threshold: '+val('read_mapping_ratio_threshold')+'\n';
+  y += 'high_confidence_threshold: '+val('high_confidence_threshold')+'\n';
+  y += 'edit_distance_decay_quality_threshold: '+val('edit_distance_decay_quality_threshold')+'\n';
+  y += 'edit_distance_no_damage_decay_quality_min: '+val('edit_distance_no_damage_min')+'\n';
+  y += 'edit_distance_damage_minus_no_damage_min: '+val('edit_distance_damage_minus')+'\n';
+  y += 'hops_detection_threshold: '+val('hops_detection_threshold')+'\n';
+  y += 'hops_edit_distance_threshold: '+val('hops_edit_distance_threshold')+'\n';
+  y += 'hops_damage_threshold: '+val('hops_damage_threshold')+'\n';
+  y += 'fastq_screen_conf: "config/fastq_screen.conf"\n';
+
+  document.getElementById('yaml-output').value = y;
+}
+
+function copyYaml() {
+  navigator.clipboard.writeText(document.getElementById('yaml-output').value)
+    .then(function(){ showToast('Copied to clipboard'); });
+}
+function downloadYaml() {
+  var b = new Blob([document.getElementById('yaml-output').value], {type:'text/yaml'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(b); a.download = 'config.yaml';
+  a.click(); URL.revokeObjectURL(a.href);
+  showToast('Downloaded config.yaml');
+}
+function resetAll() {
+  document.querySelectorAll('input[type="text"]').forEach(function(el){ el.value = el.defaultValue || ''; });
+  document.querySelectorAll('select').forEach(function(el){ el.selectedIndex = 0; });
+  document.querySelectorAll('input[type="checkbox"]').forEach(function(el){ el.checked = el.defaultChecked; });
+  document.querySelectorAll('.toggle-extra').forEach(function(el){ el.classList.remove('open'); });
+  var def = document.querySelector('input[name="pathogen_mapping_mode"][value="default"]');
+  if (def) { def.checked = true; syncModePills(); }
+  syncDetectionFilter();
+  generate();
+  showToast('Reset to defaults');
+}
+function syncModePills() {
+  document.querySelectorAll('.mode-pill').forEach(function(p){
+    p.classList.toggle('active', p.querySelector('input').checked);
+  });
+}
+
+document.querySelectorAll('input[type="text"], select').forEach(function(el){ el.addEventListener('input', generate); });
+document.querySelectorAll('input[type="checkbox"]').forEach(function(el){
+  el.addEventListener('change', function(){
+    if (el.id === 'enable_hops') toggleExtra('enable_hops', 'hops-extra');
+    if (el.id === 'hops_parallel') toggleExtra('hops_parallel', 'hops-parallel-extra');
+    if (el.id === 'enable_decom') toggleExtra('enable_decom', 'decom-extra');
+    if (el.id === 'use_escore_instead') syncDetectionFilter();
+    generate();
+  });
+});
+function syncDetectionFilter() {
+  var useEscore = chk('use_escore_instead');
+  document.getElementById('evalue-card').style.display = useEscore ? 'none' : '';
+  document.getElementById('escore-card').style.display = useEscore ? '' : 'none';
+  document.getElementById('evalue-card').classList.toggle('featured', !useEscore);
+  document.getElementById('escore-card').classList.toggle('featured', useEscore);
+}
+document.querySelectorAll('input[name="pathogen_mapping_mode"]').forEach(function(el){
+  el.addEventListener('change', function(){ syncModePills(); generate(); });
+});
+
+addSpeciesRow('bwa-rows');
+addSpeciesRow('mtdna-rows');
+syncDetectionFilter();
+generate();
+</script>
+</body>
+</html>

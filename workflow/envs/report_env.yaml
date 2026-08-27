@@ -3,11 +3,20 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
+  - python=3.11
   - r-base
   - r-ggplot2
   - r-gridextra
   - r-patchwork
   - r-readr
+  - r-readxl
   - r-viridis
   - r-pdftools
   - r-magick
+  - r-ggthemes
+  - r-metbrewer
+  - r-scales
+  - r-jsonlite
+  - r-yaml
+  - r-extrafont # Added for Lato font support
+  - r-ggtext # For markdown text formatting in plots

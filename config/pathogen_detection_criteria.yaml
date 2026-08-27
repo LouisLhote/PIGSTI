@@ -1,0 +1,72 @@
+# Pathogen Detection Criteria Configuration
+# This file defines thresholds for pathogen detection scoring
+# Modify these values to adjust detection criteria
+
+# ANI (Average Nucleotide Identity) threshold
+# Value in percentage (e.g., 96.5 means 96.5%)
+ani_threshold: 96.5
+
+# Relative Entropy threshold
+# Value between 0 and 1 (e.g., 0.7 means 70% of maximum entropy)
+entropy_threshold: 0.9
+
+# Breadth Ratio threshold
+# Ratio of observed to expected breadth of coverage (e.g., 0.8 means 80%)
+breadth_ratio_threshold: 0.8
+
+# 5' C>T Damage threshold
+# Minimum damage rate to consider (e.g., 0.01 means 1%)
+damage_5p_ct_threshold: 0.01
+
+# 3' G>A Damage threshold (if used)
+# Minimum damage rate to consider (e.g., 0.01 means 1%)
+damage_3p_ga_threshold: 0.01
+
+# HOPS Detection threshold
+# Minimum HOPS score for detection (e.g., 2)
+hops_detection_threshold: 2
+
+# HOPS Edit Distance threshold
+# Minimum HOPS score for edit distance criterion (e.g., 3)
+hops_edit_distance_threshold: 3
+
+# HOPS Damage threshold
+# Minimum HOPS score for damage criterion (e.g., 4)
+hops_damage_threshold: 4
+
+# High confidence score threshold (percentage)
+# Score percentage above which detection is considered high confidence (e.g., 0.7 means 70%)
+high_confidence_threshold: 0.7
+
+# Edit Distance Decay Quality Score threshold (NEW - primary metric)
+# Composite metric (0-1 scale) that captures descending pattern quality
+# Combines: monotonicity, dominance of 0-mismatch, exponential decay fit
+# Higher values indicate better alignment quality (good: descending pattern like 0:500, 1:350, 2:283)
+# Recommended threshold: 0.65 (adjust based on your data)
+edit_distance_decay_quality_threshold: 0.65
+
+# Edit Distance log(R²) threshold (legacy - kept for backward compatibility)
+# Minimum log(R²) value for edit distance distribution (e.g., 0.60)
+# Higher values indicate better alignment quality
+edit_distance_logr2_threshold: 0.60
+
+# Default E-score threshold (fallback only - pathogen-specific values should be in Pathogen_spreadsheet.csv)
+# Only used if min_escore column is missing or has NaN values in the spreadsheet
+escore_threshold: 5
+
+# Default Reads threshold (fallback only - pathogen-specific values should be in Pathogen_spreadsheet.csv)
+# Only used if min_reads column is missing or has NaN values in the spreadsheet
+reads_threshold: 50
+
+# --- Edit distance damage-vs-no-damage (HOPS-like) ---
+# When damage-split edit-distance files are available, scoring can additionally
+# require the "damage" metric to be high while the "no-damage" metric is low.
+# These defaults are conservative; tune based on your dataset.
+#
+# Pass edit-distance (no-damage subset) when:
+#   no_damage_decay_quality >= edit_distance_no_damage_decay_quality_min
+# Legacy (optional): edit_distance_no_damage_decay_quality_max uses <= instead.
+# Also (if implemented in scoring): (damage - no_damage) >= edit_distance_damage_minus_no_damage_min
+edit_distance_no_damage_decay_quality_min: 0.55
+edit_distance_damage_minus_no_damage_min: 0.10
+

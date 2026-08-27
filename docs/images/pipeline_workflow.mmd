@@ -1,0 +1,79 @@
+%%{{init: {{
+  'theme': 'base',
+  'themeVariables': {{
+    'fontFamily': 'Helvetica Neue, Arial, sans-serif',
+    'primaryColor': '#ffffff',
+    'primaryTextColor': '#21325B',
+    'primaryBorderColor': '#24B498',
+    'lineColor': '#64748B',
+    'clusterBkg': '#F6F7F8',
+    'clusterBorder': '#21325B'
+  }},
+  'flowchart': {{ 'curve': 'basis', 'padding': 20, 'htmlLabels': true, 'rankSpacing': 50, 'nodeSpacing': 35 }}
+}}}}%%
+flowchart TB
+
+  subgraph SPINE[" "]
+    direction LR
+    RAW([/"<b>Raw sequencing data</b><br/><sub>FASTQ · samples.tsv</sub>"/])
+    ADAPT["<b>Adapter & quality trimming</b><br/><sub>AdapterRemoval · cutadapt</sub>"]
+    FQS["<b>Host & contaminant screen</b><br/><sub>FastQ Screen · collapsed</sub>"]
+    PR["<b>Filter & dedup</b><br/><sub>PRINSEQ++</sub>"]
+    RAW --> ADAPT --> FQS
+    ADAPT --> PR
+  end
+
+  subgraph HOST["Host & mtDNA"]
+    direction LR
+    HM["<b>Host genome mapping</b><br/><sub>BWA / Bowtie2 · collapsed</sub>"]
+    DP["<b>DamageProfiler</b><br/><sub>per PCR BAM</sub>"]
+    MT["<b>Mitochondrial mapping</b><br/><sub>BWA / Bowtie2</sub>"]
+    MH{{"<b>Merge host</b><br/><sub>samtools · results/host/</sub>"}}
+    SX["<b>Genetic sexing</b><br/><sub>R residual · Cow/Goat/Sheep/Dog <i>opt</i></sub>"]
+    MM{{"<b>Merge mtDNA</b><br/><sub>samtools</sub>"}}
+    QH["<b>Merged host QC</b><br/><sub>Qualimap · samples/</sub>"]
+    QM["<b>Merged mtDNA QC</b><br/><sub>Qualimap · samples/</sub>"]
+    HM --> MH --> QH
+    HM -.-> DP
+    MH -.-> SX
+    MT --> MM --> QM
+  end
+
+  subgraph PATH["Pathogen & metagenomics"]
+    direction LR
+    CH["<b>Unaligned reads</b><br/><sub>Bowtie2 · samtools · PRINSEQ-passed</sub>"]
+    MU{{"<b>Merge FASTQs</b><br/><sub>cat · pigz · pools/</sub>"}}
+    KR["<b>Classification</b><br/><sub>KrakenUniq</sub>"]
+    DC["<b>decOM</b><br/><sub>(config)</sub>"]
+    HO["<b>HOPS</b><br/><sub>(config)</sub>"]
+    EV["<b>Kraken E-value scoring</b><br/><sub>dExp_Escore · evalue/</sub>"]
+    CK{{"<b>Checkpoint</b><br/><sub>pathogen_targets</sub>"}}
+    PM["<b>Reference mapping</b><br/><sub>BWA / Bowtie2</sub>"]
+    PQ["<b>Mapping QC</b><br/><sub>ANI · DamageProfiler · Qualimap</sub>"]
+    CH --> MU --> KR
+    MU -.-> DC
+    KR -.-> HO
+    KR --> EV --> CK --> PM --> PQ
+    HO -.-> CK
+  end
+
+  FIN([/"<b>Cohort deliverables</b><br/><sub>final/ · manifests · catalogs</sub>"/])
+
+  FQS --> HM
+  FQS --> MT
+  PR --> CH
+  QH --> FIN
+  QM --> FIN
+  PQ --> FIN
+
+  classDef input fill:#21325B,stroke:#21325B,color:#fff
+  classDef process fill:#fff,stroke:#24B498,stroke-width:2px,color:#21325B
+  classDef optional fill:#F8FAFC,stroke:#94A3B8,stroke-width:2px,stroke-dasharray:5 3,color:#21325B
+  classDef custom fill:#F6F7F8,stroke:#475569,stroke-width:2px,color:#21325B
+  classDef checkpoint fill:#FFFBF0,stroke:#D97706,stroke-width:2px,color:#21325B
+  classDef output fill:#24B498,stroke:#1A8A74,color:#fff
+  class RAW input
+  class ADAPT,FQS,PR,HM,MT,DP,QH,QM,CH,KR,EV,PM,PQ process
+  class MH,MM,MU,CK custom
+  class DC,HO,SX optional
+  class FIN output

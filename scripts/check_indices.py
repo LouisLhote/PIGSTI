@@ -58,15 +58,15 @@ def main():
         
         if missing_pathogen_indices:
             print(f'Missing pathogen BWA indices: {missing_pathogen_indices}')
-            with open('results/index_status/missing_pathogen_indices.txt', 'w') as f:
+            with open('results/workflow/index_status/missing_pathogen_indices.txt', 'w') as f:
                 for idx in missing_pathogen_indices:
                     f.write(f'{idx}\n')
             # Still create the built file to indicate checking was done
-            with open('results/index_status/pathogen_indices_built.txt', 'w') as f:
+            with open('results/workflow/index_status/pathogen_indices_built.txt', 'w') as f:
                 f.write('Pathogen index checking completed - some indices missing\n')
         else:
             print('All pathogen BWA indices present')
-            with open('results/index_status/pathogen_indices_built.txt', 'w') as f:
+            with open('results/workflow/index_status/pathogen_indices_built.txt', 'w') as f:
                 f.write('All pathogen BWA indices are present\n')
         
         # Check host indices
@@ -84,15 +84,15 @@ def main():
         
         if missing_host_indices:
             print(f'Missing host BWA indices: {missing_host_indices}')
-            with open('results/index_status/missing_host_indices.txt', 'w') as f:
+            with open('results/workflow/index_status/missing_host_indices.txt', 'w') as f:
                 for idx in missing_host_indices:
                     f.write(f'{idx}\n')
             # Still create the built file to indicate checking was done
-            with open('results/index_status/host_indices_built.txt', 'w') as f:
+            with open('results/workflow/index_status/host_indices_built.txt', 'w') as f:
                 f.write('Host index checking completed - some indices missing\n')
         else:
             print('All host BWA indices present')
-            with open('results/index_status/host_indices_built.txt', 'w') as f:
+            with open('results/workflow/index_status/host_indices_built.txt', 'w') as f:
                 f.write('All host BWA indices are present\n')
         
         # Check mtDNA indices
@@ -107,15 +107,15 @@ def main():
         
         if missing_mtdna_indices:
             print(f'Missing mtDNA BWA indices: {missing_mtdna_indices}')
-            with open('results/index_status/missing_mtdna_indices.txt', 'w') as f:
+            with open('results/workflow/index_status/missing_mtdna_indices.txt', 'w') as f:
                 for idx in missing_mtdna_indices:
                     f.write(f'{idx}\n')
             # Still create the built file to indicate checking was done
-            with open('results/index_status/mtdna_indices_built.txt', 'w') as f:
+            with open('results/workflow/index_status/mtdna_indices_built.txt', 'w') as f:
                 f.write('mtDNA index checking completed - some indices missing\n')
         else:
             print('All mtDNA BWA indices present')
-            with open('results/index_status/mtdna_indices_built.txt', 'w') as f:
+            with open('results/workflow/index_status/mtdna_indices_built.txt', 'w') as f:
                 f.write('All mtDNA BWA indices are present\n')
         
         print("Index checking completed!")
@@ -124,11 +124,11 @@ def main():
         print(f"Error during index checking: {e}")
         # Create empty status files to prevent Snakemake from failing
         os.makedirs('results/index_status', exist_ok=True)
-        with open('results/index_status/pathogen_indices_built.txt', 'w') as f:
+        with open('results/workflow/index_status/pathogen_indices_built.txt', 'w') as f:
             f.write('Index checking failed\n')
-        with open('results/index_status/host_indices_built.txt', 'w') as f:
+        with open('results/workflow/index_status/host_indices_built.txt', 'w') as f:
             f.write('Index checking failed\n')
-        with open('results/index_status/mtdna_indices_built.txt', 'w') as f:
+        with open('results/workflow/index_status/mtdna_indices_built.txt', 'w') as f:
             f.write('Index checking failed\n')
         raise
 
