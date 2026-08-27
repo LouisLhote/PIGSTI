@@ -5,6 +5,7 @@ config/Pathogen_spreadsheet.csv
 config/fastq_screen.conf
 config/config_hops_custom.txt
 config/config_hops2.0.txt
+config/user_profile_form.html
 
 # Keep portable templates
 !config/config.example.yaml
@@ -12,7 +13,6 @@ config/config_hops2.0.txt
 !config/Pathogen_spreadsheet.example.csv
 !config/pathogen_detection_criteria.yaml
 !config/pigsti_config_generator.html
-!config/user_profile_form.html
 
 # ===== Run outputs & caches =====
 results/
@@ -46,3 +46,9 @@ Thumbs.db
 .env.*
 *.pem
 credentials*.json
+
+# ===== Local Zenodo release prep (not for GitHub) =====
+zenodo/
+zenodo/_supp_staging/
+.zenodo.json
+Supp/
