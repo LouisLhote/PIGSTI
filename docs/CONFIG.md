@@ -96,6 +96,7 @@ Pathogen reference FASTAs for **mapping** come from the spreadsheet `bwa index` 
 | `host_aligner` | `bwa` | `bwa` or `bowtie2` for host/mtDNA. |
 | `pathogen_screening_only` | `false` | `true` skips host/mtDNA and forces `pathogen_mapping_mode: default`. |
 | `strict_inputs` | `true` | Fail fast on empty/missing critical inputs. |
+| `adapter_removal_qualitymax` | `41` | AdapterRemoval `--qualitymax` (Phred+33). Raise (e.g. `50`) if FASTQs exceed Q41 (NovaSeq / some SRA). |
 | `fastq_screen_full_dataset_rescreen` | `true` | If best species `#One_hit_one_genome` on the default subset is below the threshold, re-run FastQ Screen with `--subset 0` (full collapsed FASTQ). |
 | `fastq_screen_full_dataset_min_one_hit` | `50` | Minimum `#One_hit_one_genome` reads on the subset pass before triggering a full-dataset re-screen. |
 | `enable_sexing` | `true` | Run chromosome-residual sexing after host mapping (requires `pathogen_screening_only: false`). |

@@ -22,6 +22,8 @@ pathogen_spreadsheet: "config/Pathogen_spreadsheet.csv"
 # AdapterRemoval (paired-end rule):
 # adapter_removal_adapter1: "AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC"
 # adapter_removal_adapter2: "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
+# Phred+33 quality ceiling (AdapterRemoval default is 41; raise e.g. to 50 for NovaSeq / some SRA):
+# adapter_removal_qualitymax: 41
 #
 # cutadapt (single-end rule):
 # cutadapt_adapter: "AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC"
