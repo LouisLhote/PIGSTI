@@ -281,6 +281,10 @@ Screening uses KrakenUniq clade read count (default **≥ 50**) and Guellil **E-
 | [`docs/OUTPUT_SCHEMA.md`](docs/OUTPUT_SCHEMA.md) | Result directory layout |
 
 ---
+## Citation
+Please cite : PIGSTI: a modular, reproducible pipeline for detecting species identity, pathogens, and microbes from animal palaeogenomic data
+Louis L’Hôte, Catherine Butt, Áine Halpin, Luisa Sacristán, Valeria Mattiangeli, Pernille Bangsgaard, Lisa Yeomans, Melinda Zeder, Marjan Mashkour, Hossein Davoudi, Svend Hansen, Delphine Decruyenaere, Melissa Kennedy, Adeline Vautrin, Alisher Begmatov, Andrej B. Belinskiy, Amridin Berdimuradov, Gennadiy Bogomolov, Jacopo Bruno, Alexey Kalmykov, Jane McMahon, Jamal Mirzaakhmedov, Susan Pollock, Rocco Rante, Sabine Reinhold, Tobias Richter, Alisher Sandiboev, Eberhard Sauer, Laura Strolin, Hirofumi Teramura, Hugh Thomas, Jolijn A. M. Erven, Shigeki Nakagome, Daniel G. Bradley, Kevin G. Daly
+bioRxiv 2026.09.01.748539; doi: https://doi.org/10.64898/2026.09.01.748539
 
 ## License
 
