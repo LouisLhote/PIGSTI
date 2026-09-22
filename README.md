@@ -186,11 +186,11 @@ cp config/Pathogen_spreadsheet.example.csv config/Pathogen_spreadsheet.csv
 # → edit paths, or use config/pigsti_config_generator.html
 
 # 4. Dry-run (validation runs at Snakefile load)
-snakemake -n -p --use-conda --conda-frontend mamba \
+snakemake -n -p --use-conda --conda-frontend conda \
   --conda-prefix .snakemake/conda --cores 32
 
 # 5. Run
-snakemake --use-conda --conda-frontend mamba \
+snakemake --use-conda --conda-frontend conda \
   --conda-prefix .snakemake/conda --cores 32 --rerun-incomplete
 ```
 
